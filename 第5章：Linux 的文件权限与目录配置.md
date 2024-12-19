@@ -1,5 +1,5 @@
-### 2. Linux 文件权限概念
-
+<h2 id="PWCA9">2 Linux 文件权限概念</h2>
+<h3 id="xp5nf">Linux 文件属性</h3>
 ```powershell
 [root@study ~]$ ls -al
 total 72
@@ -37,5 +37,6 @@ chmod：修改文件的权限，SUID、SGID、SBIT 等的特性
 
 ---
 
-### 3. Linux 目录配置
+<h2 id="kSzjh">3 Linux 目录配置</h2>
+
 
