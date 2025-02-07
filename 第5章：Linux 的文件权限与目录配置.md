@@ -1,5 +1,5 @@
-<h2 id="PWCA9">2 Linux 文件权限概念</h2>
-<h3 id="xp5nf">Linux 文件属性</h3>
+# Linux 文件权限概念
+## Linux 文件属性
 ```powershell
 [root@study ~]$ ls -al
 total 72
@@ -22,21 +22,13 @@ drwx------   2 root root 4096 Sep 21 16:56 .ssh
 -rw-------   1 root root  616 Oct  8 22:36 .viminfo
 ```
 
-
-
-<h3 id="Ujujy">如何修改文件属性与权限</h3>
+## 如何修改文件属性与权限
 chgrp：修改文件所属用户组
 
 chown：修改文件拥有者
 
 chmod：修改文件的权限，SUID、SGID、SBIT 等的特性
 
-
-
-
-
----
-
-<h2 id="kSzjh">3 Linux 目录配置</h2>
+## Linux 目录配置
 
 
