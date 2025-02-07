@@ -1,4 +1,4 @@
-变量的使用：echo 
+# 变量的使用：echo 
 
 ```powershell
 [root@study ~]$ echo $variable
@@ -7,8 +7,7 @@
 ```
 
 
-
-2. 取消刚刚设置的 myname 这个变量内容：unset
+## 取消刚刚设置的 myname 这个变量内容：unset
 
 ```powershell
 [root@study ~]$ myname=VBird
@@ -18,8 +17,7 @@ VBird
 ```
 
 
-
-5. 数据流重定向
+# 数据流重定向
 + 标准输入（stdin）：代码为 0 ，使用 < 或 << ;
 + 标准输出（stdout）：代码为 1，使用 > 或 >>;
 + 标准错误输出（stderr）：代码为 2，使用 2> 或 2>>;
@@ -49,7 +47,7 @@ VBird
 
 
 
-<h2 id="UrNep">管道命令</h2>
+# 管道命令
 + 管道命令仅会处理标准输出，对于标准错误会予以忽略
 + 管道命令必须要能够接受来自前一个命令的数据成为标准输入继续处理才行
 
@@ -61,9 +59,7 @@ VBird
 
 
 
-<h3 id="rQhNV">选取命令：cut、grep</h3>
-| **              ****cut**<br/>这个命令可以将一段信息的某一段给它切出来，处理的信息是以行为单位。<br/>[root@study ~]$ cut -d '分隔字符' -f fields <br/>[root@study ~]$ cut -c 字符区间<br/>选项与参数：<br/>-d：后面接分隔字符，与 -f 一起使用<br/>-f：根据 -d 的分隔字符将一段信息划分成为数段，用 -f 取出第几段的意思<br/>-c：以字符的单位取出固定字符区间 |
-| --- |
+# 选取命令：cut、grep
 
 
 ```powershell
