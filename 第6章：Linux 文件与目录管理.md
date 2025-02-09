@@ -1,6 +1,10 @@
-# 1. 目录与路径
+# 6.1 目录与路径
 
-```bash
+
+
+## 2. 目录的相关操作
+
+```powershell
 .  代表此层目录
 .. 代表上一层目录
 -  代表前一个工作目录
@@ -9,8 +13,6 @@
 ```
 
 
-
-下面我们就来谈一谈几个常见的处理目录的命令：
 
 * cd：切换目录
 * pwd：显示当前目录
@@ -21,9 +23,9 @@
 
 ## cd (change directory，切换目录)
 
-```bash
+```powershell
 [root@study ~]# cd ~dmtsai
-# 代表进入 dmtsai 这个使用者的家目录，亦即 /home/dmtsai。
+# 代表进入 dmtsai 这个使用者 的家目录，亦即 /home/dmtsai。
 
 [root@study dmtsai]# cd ~
 # 表示回到自己的家目录，亦即是 /root 这个目录。
@@ -42,6 +44,22 @@
 
 [root@study mail]# cd ../postfix
 # 这个是相对路径的写法，我们由 /var/spool/mail 到 /var/spool/postfix 就这样写。
+```
+
+
+
+
+
+## pwd（显示目前所在的目录）
+
+```powershell
+[root@study ~]# pwd [-P]
+选项与参数：
+-P: 显示出真正的路径，而非使用链接路径
+
+单纯显示出目前的工作目录
+[root@study ~]# pwd
+/root
 ```
 
 

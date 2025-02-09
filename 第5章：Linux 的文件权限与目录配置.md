@@ -1,7 +1,12 @@
+<<<<<<< HEAD
 # 5.2 Linux 文件权限概念
 
 ## 1. Linux 文件属性
 
+=======
+# Linux 文件权限概念
+## Linux 文件属性
+>>>>>>> 6b964d77b4ea52ccd99ecd8c10bd82f0e550c989
 ```powershell
 [root@study ~]$ ls -al
 total 72
@@ -24,14 +29,21 @@ drwx------   2 root root 4096 Sep 21 16:56 .ssh
 -rw-------   1 root root  616 Oct  8 22:36 .viminfo
 ```
 
+<<<<<<< HEAD
 
 
 ## 2. 如何修改文件属性与权限
+=======
+## 如何修改文件属性与权限
+chgrp：修改文件所属用户组
+>>>>>>> 6b964d77b4ea52ccd99ecd8c10bd82f0e550c989
 
 ### chgrp：修改文件所属用户组
 
+## Linux 目录配置
 
 
+<<<<<<< HEAD
 ### chown：修改文件拥有者
 
 
@@ -74,3 +86,5 @@ xyz：就是刚刚提到的数字类型的权限属性，为 rwx 属性数值的
 
    
 
+=======
+>>>>>>> 6b964d77b4ea52ccd99ecd8c10bd82f0e550c989
