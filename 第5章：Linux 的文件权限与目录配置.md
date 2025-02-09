@@ -1,4 +1,6 @@
-### 2. Linux 文件权限概念
+# 5.2 Linux 文件权限概念
+
+## 1. Linux 文件属性
 
 ```powershell
 [root@study ~]$ ls -al
@@ -24,18 +26,51 @@ drwx------   2 root root 4096 Sep 21 16:56 .ssh
 
 
 
-<h3 id="Ujujy">如何修改文件属性与权限</h3>
-chgrp：修改文件所属用户组
+## 2. 如何修改文件属性与权限
 
-chown：修改文件拥有者
-
-chmod：修改文件的权限，SUID、SGID、SBIT 等的特性
+### chgrp：修改文件所属用户组
 
 
 
+### chown：修改文件拥有者
 
 
----
 
-### 3. Linux 目录配置
+### chmod：修改文件的权限，SUID、SGID、SBIT 等的特性
+
+```powershell
+[root@study ~]# chmod [-R] xyz 文件或目录
+选项与参数：
+xyz：就是刚刚提到的数字类型的权限属性，为 rwx 属性数值的增加。
+-R: 进行递归修改，亦或连同子目录下的所有文件都会修改。
+```
+
+举例来说，如果要将 .bashrc 这个文件所有的权限都设置启用，那么就执行：
+
+```powershell
+[root@study ~]# ls -al .bashrc
+-rw-r--r--. 1 root root 176 Dec 29 2013 .bashrc
+
+[root@study ~]# chmod 777 .bashrc
+[root@study ~]# ls -al .bashrc
+-rwxrwxrwx. 1 root root 176 Dec 29 2013 .bashrc
+```
+
+
+
+## 3. 目录与文件的权限意义
+
+
+
+### 权限对文件的重要性
+
+* r (read)：可读取此文件的实际内容，如读取文本文件的文字内容等
+* w (write)：可以编辑、新增或是修改该文件的内容（但不含删除该文件）
+* x（exeute）：该文件具有可以被系统执行的权限
+
+
+
+# 5.3 Linux 目录配置
+
+   
 
