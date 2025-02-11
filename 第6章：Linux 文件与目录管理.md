@@ -376,3 +376,23 @@ network
 
 
 
+
+
+# 6.4 文件与目录的默认权限与隐藏权限
+
+
+
+## 1. 文件默认权限：umask
+
+基本上，umask 就是指定目前用户在建立文件或目录时候的权限默认值，那么如何得知或设置 umask？它的指定条件以下面的方式来指定：
+
+```powershell
+[root@study ~]# umask
+0022  一般与权限有关的的后面三个数字
+
+[root@study ~]# umask -S
+u=rwx,g=rx,o=rx
+```
+
+
+
