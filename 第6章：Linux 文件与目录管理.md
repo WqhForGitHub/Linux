@@ -413,5 +413,5 @@ drwxrwxrwx
 要注意的是，umask 的数字指的是 **`该默认值需要减掉的权限`** 。如果以上面的例子来说明的话，因为 umask 为 022，所以 user 并没有被拿掉任何权限，不过 group 与 others 的权限被拿掉了 2（也就是 w 这个权限），那么当用户：
 
 * **`建立文件时：（-rw-rw-rw-）- （-----w--w-）= -rw-r--r--`** 
-* **`建立目录时：（drwxrwxrwx）-（d----w--w-）= drwxr-xr-x`                                    ** 
+* **`建立目录时：（drwxrwxrwx）-（d----w--w-）= drwxr-xr-x`**  
 
