@@ -28,7 +28,7 @@
 
 **`如下图，你会发现一般命令模式可与编辑模式及命令行模式切换，但编辑模式与命令行模式之间不可互相切换`** 
 
-9.1
+![](https://github.com/WqhForGitHub/Linux/blob/%E9%B8%9F%E5%93%A5%E7%9A%84Linux%E7%A7%81%E6%88%BF%E8%8F%9C/static/9/9.1.png?raw=true)
 
 
 
