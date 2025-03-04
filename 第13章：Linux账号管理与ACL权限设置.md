@@ -298,7 +298,7 @@ sys:::
 [root@study ~]# groupdel mygroup
 ```
 
-
+​                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
 
 
 
