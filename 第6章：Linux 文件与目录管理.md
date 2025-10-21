@@ -1,417 +1,154 @@
 # 6.1 目录与路径
 
+由前一章 Linux 的文件权限与目录配置中通过 FHS 了解了 Linux 的树状目录概念之后，接下来就得实际地来搞定一些基本的路径问题了。这些目录的问题当中，最重要的莫过于前一章也谈过的绝对路径与相对路径的意义。绝对 / 相对路径的写法并不相同，要特别注意。此外，当你执行命令时，该命令是如何找到的？这与 PATH 这个变量有关，下面就让我们来谈谈。
 
+## 6.1.1 相对路径与绝对路径
 
-## 2. 目录的相关操作
+在开始目录的切换之前，你必须要先了解一下所谓的路径（PATH），有趣的是：什么是相对路径与绝对路径？虽然前一章已经针对这个问题提过一次，不过，这里不厌其烦地再次强调一下。
 
-```powershell
-.  代表此层目录
-.. 代表上一层目录
--  代表前一个工作目录
-~  代表目前使用者身份所在的家目录
-~account 代表 account 这个使用者的家目录 (account 是个账号名称)
-```
+- **绝对路径**：路径的写法 “一定由根目录`/`写起”，例如：`/usr/share/doc`这个目录。
+- **相对路径**：路径的写法 “不是由`/`写起”，例如由`/usr/share/doc`要到`/usr/share/man`下面时，可以写成：“`cd ../man`” 这就是相对路径的写法，相对路径意指相对于目前工作目录的路径。
 
+### ◆ 相对路径的用途
 
+那么相对路径与绝对路径有什么了不起呀？呵，那可真的是了不起。假设你编写了一个软件，这个软件共需要三个目录，分别是`etc`、`bin`、`man`这三个目录，然而由于不同的人喜欢安装在不同的目录之下，假设甲安装的目录是`/usr/local/packages/etc`、`/usr/local/packages/bin`及`/usr/local/packages/man`，不过乙却喜欢安装在`/home/packages/etc`、`/home/packages/bin`、`/home/packages/man`这三个目录中，请问如果需要用到绝对路径的话，那么是否很麻烦？是的，如此一来每个目录下的东西就很难对应起来，这个时候相对路径的写法就显得特别的重要了。
 
-* cd：切换目录
-* pwd：显示当前目录
-* mkdir：建立一个新目录
-* rmdir：删除一个空目录
+此外，如果你跟鸟哥一样，喜欢将路径的名字写得很长，好让自己知道哪个目录是在干什么的，例如：`/cluster/raid/output/taiwan2006/smoke`这个目录，而另一个目录在`/cluster/raid/output/taiwan2006/cctm`，那么我从第一个要到第二个目录去的话，怎么写比较方便？当然是 “`cd ../cctm`” 比较方便，对吧！
 
+### ◆ 绝对路径的用途
 
+但是对于文件名的正确性来说，绝对路径的正确度要比较好。一般来说，鸟哥会建议你，如果是在写程序（shell 脚本）来管理系统的条件下，务必使用绝对路径。怎么说？因为绝对路径的写法虽然比较麻烦，但是可以肯定这个写法绝对不会有问题。如果使用相对路径在程序当中，则可能由于你执行的工作环境不同，导致一些问题的发生。这个问题在计划任务（`at`与`cron`，第 15 章）当中尤其重要，且这个现象我们在 12 章 shell 脚本时，也会再次提醒你。
 
-## cd (change directory，切换目录)
+## 6.1.2 目录的相关操作
 
-```powershell
+我们之前提到切换目录的命令是`cd`，还有哪些可以进行目录操作的命令呢？例如建立目录、删除目录之类，还有要先知道的就是有哪些比较特殊的目录？举例来说，下面这些就是比较特殊的目录，得要用力地记下来才行：
+
+- `.` 代表此目录。
+- `..` 代表上一层目录。
+- `-` 代表前一个工作目录。
+- `~` 代表目前使用者身份所在的家目录。
+- `~account` 代表`account`这个使用者的家目录（`account`是个账号名称）。
+
+需要特别注意的是：在所有目录下面都会存在的两个目录，分别是 “`.`” 与 “`..`” 分别代表此层与上层目录的意思。那么来思考一下下面这个例题：
+
+### 例题
+
+请问在 Linux 下面，根目录有没有上层目录（`..`）存在？
+
+答：若使用 “`ls -al`” 去查询，可以看到根目录下确实存在`. 与 ..`两个目录，再仔细查看，可发现这两个目录的属性与权限完全一致，这代表根目录的上一层（`..`）与根目录自己（`.`）是同一个目录。
+
+下面我们就来谈一谈几个常见的处理目录的命令：
+
+- `cd`：切换目录
+- `pwd`：显示当前目录
+- `mkdir`：建立一个新目录
+- `rmdir`：删除一个空目录
+
+### ◆ cd（change directory，切换目录）
+
+我们知道 dmtsai 这个用户的家目录是`/home/dmtsai/`，而 root 家目录则是`/root/`，假设我以 root 身份在 Linux 系统中，那么简单说明一下这几个特殊目录的意义是：
+
+```bash
+[dmtsai@study ~]$ su - # 先切换身份成为 root 看看。
+[root@study ~]# cd [相对路径或绝对路径]
+# 最重要的就是目录的绝对路径与相对路径，还有一些特殊目录的符号。
 [root@study ~]# cd ~dmtsai
-代表进入 dmtsai 这个使用者 的家目录，亦即 /home/dmtsai。
-
+# 代表进入 dmtsai 这个使用者的家目录，亦即/home/dmtsai。
 [root@study dmtsai]# cd ~
-表示回到自己的家目录，亦即是 /root 这个目录。
-
-[root@study ~]# cd 
-没有加上任何路径，也还是代表回到自己家目录的意思。
-
+# 表示回到自己的家目录，亦即是/root 这个目录。
+[root@study ~]# cd
+# 没有加上任何路径，也还是代表回到自己家目录的意思。
 [root@study ~]# cd ..
-表示去到目前的上层目录，亦即是 /root 的上层目录的意思。
-
+# 表示去到目前的上层目录，亦即是/root 的上层目录的意思。
 [root@study /]# cd -
-表示回到刚刚的那个目录，也就是 /root。
-
+# 表示回到刚刚的那个目录，也就是/root。
 [root@study ~]# cd /var/spool/mail
-这个就是绝对路径的写法。直接指定要去的完整路径名称。
-
+# 这个就是绝对路径的写法。直接指定要去的完整路径名称。
 [root@study mail]# cd ../postfix
-这个是相对路径的写法，我们由 /var/spool/mail 到 /var/spool/postfix 就这样写。
+# 这个是相对路径的写法，我们由/var/spool/mail 到/var/spool/postfix 就这样写。
 ```
 
+cd 是 Change Directory 的缩写，这是用来切换工作目录的命令，注意目录名称与 cd 命令之间存在一个空格。当登录 Linux 系统后，每个账号都会在自己账号的家目录中，那回到上一层目录可以用 “`cd ..`”。利用相对路径的写法必须要确认你目前的路径才能正确地去到想要去的目录。例如上表当中最后一个例子，你必须要确认你是在`/var/spool/mail`当中，并且知道在`/var/spool`当中有个 mqueue 的目录才行，这样才能使用`cd ../postfix`进入正确的目录，否则就要直接输入`cd /var/spool/postfix`。
 
+其实，我们的提示字符，亦即那个`[root@study ~]#`当中，就已经有指出当前目录了，刚登录时会到自己的家目录，而家目录还有一个符号，那就是 “`~`”。例如上面的例子可以发现，使用 “`cd ~`” 可以回到自己的家目录里面。另外，针对 cd 的使用方法，如果仅输入`cd`时，代表的就是 “`cd ~`” 的意思，亦即回到自己的家目录。而那个 “`cd -`” 比较难以理解，请自行多做几次练习，就会明白了。
 
+>还是要一再地提醒，我们的 Linux 的默认命令行模式（bash shell）具有文件补齐功能，你要常常利用 [Tab] 按键来自动补全目录路径。这可是个好习惯，可以避免你按错键盘输入错字。
 
+### ◆ pwd（显示目前所在的目录）
 
-## pwd（显示目前所在的目录）
-
-```powershell
+```bash
 [root@study ~]# pwd [-P]
 选项与参数：
--P: 显示出真正的路径，而非使用链接路径
+-P：显示出真正的路径，而非使用链接（link）路径。
 
-单纯显示出目前的工作目录
+范例：单纯显示出目前的工作目录
 [root@study ~]# pwd
-/root
+/root  <== 显示出工作目录。
+范例：显示出真正的目录，而非链接文件本身的目录名而已。
+[root@study ~]# cd /var/mail  <==注意，/var/mail是一个链接文件。
+[root@study mail]# pwd
+/var/mail  <==pwd只显示目前的工作目录。
+[root@study mail]# pwd -P
+/var/spool/mail  <==怎么回事？有没有加-P差很多。
+[root@study mail]# ls -ld /var/mail
+lrwxrwxrwx. 1 root root 10 May  4 17:51 /var/mail -> spool/mail
+# 看到这里应该知道为啥了吧？因为/var/mail是链接文件，链接到/var/spool/mail。
+# 所以，加上pwd -P的选项后，不会显示链接文件的路径，而是显示正确的完整路径。
 ```
 
+pwd 是 Print Working Directory 的缩写，也就是显示目前所在目录的命令，例如在上面最后的目录是`/var/mail`，但是提示字符仅显示 mail，如果你想要知道目前所在的目录，可以输入 pwd 即可。此外，由于很多的软件所使用的目录名称都相同，例如`/usr/local/etc/`和`/etc`，但是通常 Linux 仅列出最后面那一个目录而已，这个时候你就可以使用 pwd 来知道你的所在目录。
 
+其实有趣的是那个`-P`的选项。它可以让我们取得正确的目录名称，免得搞错目录，造成损失。显示的。如果你使用的是 CentOS 7.x 的话，刚好`/var/mail`是`/var/spool/mail`的链接文件，通过到`/var/mail`执行`pwd -P`就能够知道这个选项的意义。
 
-## mkdir （建立新目录）
+### ◆ mkdir（建立新目录）
 
-```powershell
+```bash
 [root@study ~]# mkdir [-mp] 目录名称
+
 选项与参数：
--m：设置文件的权限。直接设置，不使用默认权限（umask）
--p：帮助你直接将所需要的目录（包括上层目录）递归创建
+-m：设置文件的权限。直接设置，不使用默认权限（umask）。
+-p：帮助你直接将所需要的目录（包含上层目录）递回创建。
 
+范例：请到 /tmp 下面尝试建立数个新目录看看：
 [root@study ~]# cd /tmp
-[root@study tmp]# mkdir test
-[root@study tmp]# mkdir -p test1/test2/test/test4 
+[root@study tmp]# mkdir test  <==建立一名为test的新目录。
+[root@study tmp]# mkdir test1/test2/test3/test4
+mkdir: cannot create directory ‘test1/test2/test3/test4’: No such file or directory
+# 话说，系统告诉我们，不可能建立这个目录，就是没有目录才要建立的，见鬼哦？
+[root@study tmp]# mkdir -p test1/test2/test3/test4
+# 原来是要建test4上层先建test3的原因，加了这个-p的选项，可以自行帮你建立多层目录。
 
-设置权限为 rwx--x--x 的目录
+范例：建立权限为 rwx--x--x 的目录。
 [root@study tmp]# mkdir -m 711 test2
+[root@study tmp]# ls -ld test*
+drwxr-xr-x. 2 root root  6 Jun  4 19:03 test
+drwxr-xr-x. 3 root root 18 Jun  4 19:04 test1
+drwx--x--x. 2 root root  6 Jun  4 19:05 test2
+# 仔细看上面的权限部分，如果没有加上-m来强制设置属性，系统会使用默认属性。
+# 那么你的默认属性是什么？这要通过下面的umask才能了解。
 ```
 
+如果想要建立新的目录的话，那么就使用 mkdir（make directory）吧！不过，在默认的情况下，你如果想要建立新的目录的话，那么例如，假如你要建立一个目录为`/home/bird/testing/test1`，那么首先必须要有`/home/bird`这个目录，然后`/home/bird/testing`都必须要存在，才可以建立`/home/bird/testing/test1`这个目录。假如没有`/home/bird/testing`时，就没有办法建立 test1 的目录。
 
+不过，现在有个更简单且有效的方法，那就是加上`-p`这个选项，你可以直接执行：`mkdir -p /home/bird/testing/test1`，则系统会自动帮你将`/home/bird/`、`/home/bird/testing/`依序地建立起目录。并且，如果该目录本来就已经存在时，系统也不会显示错误信息。挺快乐的吧！不过鸟哥不建议常用 -p 这个选项，因为担心如果你打错字，那么目录名称就会变得乱七八糟。
 
-## rmdir（删除空的目录）
-
-```powershell
-[root@study ~]# rmdir [-p] 目录名称
-选项与参数：
--p：连同上层空的目录也一起删除
-
-[root@study ~]# cd /tmp 
-[root@study tmp]# rmdir -p test1/test2/test3/test4
-```
-
-
-
-## 关于执行文件路径的变量：$PATH
-
-```powershell
-[root@study ~]# echo $PATH
-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin
-```
-
-
-
-
-
-# 6.2 文件与目录管理
-
-
-
-## 1. 文件与目录的查看：ls
-
-```powershell
-[root@study ~]# ls [-aADfFhilmrRSt] 文件名或目录名称
-[root@study ~]# ls [--color={never,auto,always}] 文件名或目录名称
-[root@study ~]# ls [--full-time] 文件名或目录名称
 
-选项与参数：
--a：全部的文件，连同隐藏文件（开头为 . 的文件）一起列出来
--d：仅列出目录本身，而不是列出目录内的文件数据
--l：详细信息展示，包含文件的属性与权限等数据                                    
-```
-
-
 
-```powershell
-[root@study ~]# ls -al ~
-total 84
-dr-xr-x---. 10 root root  4096 Feb  6 17:31 .
-dr-xr-xr-x. 19 root root  4096 Feb  6 17:40 ..
-drwxr-xr-x   5 root root  4096 Feb  9 11:22 app
--rw-------   1 root root 12636 Feb 10 17:26 .bash_history
--rw-r--r--.  1 root root    18 Dec 29  2013 .bash_logout
--rw-r--r--.  1 root root   176 Dec 29  2013 .bash_profile
--rw-r--r--.  1 root root   176 Dec 29  2013 .bashrc
-drwx------   3 root root  4096 Aug 18  2017 .cache
--rw-r--r--.  1 root root   100 Dec 29  2013 .cshrc
-drwx------   3 root root  4096 Sep 22 12:28 .docker
-drwxr-xr-x   3 root root  4096 Sep 22 12:40 mongo
-drwxr-xr-x   2 root root  4096 Aug 18  2017 .pip
-drwxr-----   3 root root  4096 Sep 21 18:17 .pki
--rw-r--r--   1 root root    64 Aug 18  2017 .pydistutils.cfg
-drwxr-xr-x   3 root root  4096 Feb  6 17:37 redis
-drwx------   2 root root  4096 Sep 21 16:56 .ssh
--rw-r--r--.  1 root root   129 Dec 29  2013 .tcshrc
--rw-------   1 root root   616 Oct  8 22:36 .viminfo
 
-不显示颜色，但显示出该文件名代表的类型（type）
-[root@study ~]# ls -alF --color=never ~
-total 84
-dr-xr-x---. 10 root root  4096 Feb  6 17:31 ./
-dr-xr-xr-x. 19 root root  4096 Feb  6 17:40 ../
-drwxr-xr-x   5 root root  4096 Feb  9 11:22 app/
--rw-------   1 root root 12636 Feb 10 17:26 .bash_history
--rw-r--r--.  1 root root    18 Dec 29  2013 .bash_logout
--rw-r--r--.  1 root root   176 Dec 29  2013 .bash_profile
--rw-r--r--.  1 root root   176 Dec 29  2013 .bashrc
-drwx------   3 root root  4096 Aug 18  2017 .cache/
--rw-r--r--.  1 root root   100 Dec 29  2013 .cshrc
-drwx------   3 root root  4096 Sep 22 12:28 .docker/
-drwxr-xr-x   3 root root  4096 Sep 22 12:40 mongo/
-drwxr-xr-x   2 root root  4096 Aug 18  2017 .pip/
-drwxr-----   3 root root  4096 Sep 21 18:17 .pki/
--rw-r--r--   1 root root    64 Aug 18  2017 .pydistutils.cfg
-drwxr-xr-x   3 root root  4096 Feb  6 17:37 redis/
-drwx------   2 root root  4096 Sep 21 16:56 .ssh/
--rw-r--r--.  1 root root   129 Dec 29  2013 .tcshrc
--rw-------   1 root root   616 Oct  8 22:36 .viminfo
 
-完整的显示文件的修改时间
-[root@study ~]# ls -al --full-time ~
-total 84
-dr-xr-x---. 10 root root  4096 2025-02-06 17:31:25.317247346 +0800 .
-dr-xr-xr-x. 19 root root  4096 2025-02-06 17:40:12.626039955 +0800 ..
-drwxr-xr-x   5 root root  4096 2025-02-09 11:22:07.040449602 +0800 app
--rw-------   1 root root 12636 2025-02-10 17:26:34.029249000 +0800 .bash_history
--rw-r--r--.  1 root root    18 2013-12-29 10:26:31.000000000 +0800 .bash_logout
--rw-r--r--.  1 root root   176 2013-12-29 10:26:31.000000000 +0800 .bash_profile
--rw-r--r--.  1 root root   176 2013-12-29 10:26:31.000000000 +0800 .bashrc
-drwx------   3 root root  4096 2017-08-18 11:59:43.439890649 +0800 .cache
--rw-r--r--.  1 root root   100 2013-12-29 10:26:31.000000000 +0800 .cshrc
-drwx------   3 root root  4096 2024-09-22 12:28:45.976792353 +0800 .docker
-drwxr-xr-x   3 root root  4096 2024-09-22 12:40:59.365055714 +0800 mongo
-drwxr-xr-x   2 root root  4096 2017-08-18 12:00:32.471660122 +0800 .pip
-drwxr-----   3 root root  4096 2024-09-21 18:17:03.511918487 +0800 .pki
--rw-r--r--   1 root root    64 2017-08-18 12:00:32.469660300 +0800 .pydistutils.cfg
-drwxr-xr-x   3 root root  4096 2025-02-06 17:37:38.061185369 +0800 redis
-drwx------   2 root root  4096 2024-09-21 16:56:25.663037854 +0800 .ssh
--rw-r--r--.  1 root root   129 2013-12-29 10:26:31.000000000 +0800 .tcshrc
--rw-------   1 root root   616 2024-10-08 22:36:05.838667574 +0800 .viminfo
-```
 
 
 
-## 2. 复制、删除与移动：cp、rm、mv                                                                          
 
 
 
-### cp（复制文件或目录）
 
-```powershell
-[root@study ~]# cp [-adfilprsu] 源文件（source）目标文件（destination）
-[root@study ~]# cp [options] source1 source2 source3 ... directory
-选项与参数：
--a：相当于 -dr --preserve=all 的意思
--i：若目标文件（destination）已经存在时，在覆盖时会先询问操作的进行
--p：连同文件的属性（权限、用户、时间）一起复制过去，而非使用默认属性
--r：递归复制，用于目录的复制操作
 
-如果源文件有两个以上，则最后一个目标文件一定要是目录才行
-```
 
 
 
-```powershell
-用 root 身份，将家目录下的 .bashrc 复制到 /tmp 下，并更名为 bashrc
-[root@study ~]# cp ~/.bashrc /tmp/bashrc
-[root@study ~]# cp -i ~/.bashrc /tmp/bashrc
-cp: overwrite `/tmp/bashrc`? n  n 为不覆盖，y 为覆盖
 
-切换目录到 /tmp，并将 /var/log/wtmp 复制到 /tmp 且观察属性
-[root@study ~]# cd /tmp
-[root@study tmp]# cp /var/log/wtmp .  
 
-如果你想要将文件的所有特性都一起复制过来该怎么办？可以加上 -a，如下所示：
-[root@study tmp]# cp -a /var/log/wtmp wtmp_2
 
 
--r 可以复制目录，但是，文件与目录的权限可能会被改变
-[root@study tmp]# cp -r /etc/ /tmp
-```
-
-
-
-### rm（删除文件或目录）
-
-```powershell
-[root@study ~]# rm [-fir] 文件或目录
-选项与参数：
--f：就是 force 的意思，忽略不存在的文件，不会出现警告信息
--i：交互模式，在删除前会询问使用者是否操作
--r：递归删除，最常用于目录的删除，这是非常危险的选项
-
-如果加上 -i 的选项就会主动询问，避免你删除到错误的文件名
-[root@study ~]# cd /tmp
-[root@study tmp]# rm -i bashrc
-rm：remove regular file `bashrc`? y
-```
-
-
-
-### mv（移动文件与目录，或重命名）
-
-```powershell
-[root@study ~]# mv [-fiu] source destination
-[root@study ~]# mv [options] source1 source2 source3 ... directory
-选项与参数：
--f：force 强制的意思，如果目标文件已经存在，不会询问而直接覆盖
--i：若目标文件（destination）已经存在时，就会询问是否覆盖
--u：若目标文件已经存在时，且 source 比较新，才会更新（update）
-
-复制一文件，建立一目录，将文件移动到目录中
-[root@study ~]# cd /tmp
-[root@study tmp]# cp ~/.bashrc bashrc
-[root@study tmp]# mkdir mvtest
-[root@study tmp]# mv bashrc mvtest
-
-将刚刚的目录名称更名为 mvtest2
-[root@study tmp]# mv mvtest mvtest2
-
-再建立两个文件，再全部移动到 /tmp/mvtest2 当中
-[root@study tmp]# cp ~/.bashrc bashrc1
-[root@study tmp]# cp ~/.bashrc bashrc2
-[root@study tmp]# mv bashrc1 bashrc2 mvtest2
-```
-
-
-
-
-
-## 3. 获取路径的文件名与目录名称
-
-```powershell
-取得最后的文件名
-[root@study ~]# basename /etc/sysconfig/network
-network
-
-取得目录名
-[root@study ~]# dirname /etc/sysconfig/network
-/etc/sysconfig
-```
-
-
-
-
-
-# 6.3 文件内容查看 
-
-
-
-## 1. 直接查看文件内容
-
-
-
-### cat
-
-```powershell
-[root@study ~]# cat [-AbEnTv]
-选项与参数：
--n：打印出行号，连同空白行也会有行号
-
-[root@study ~]# cat -n /etc/issue 
-```
-
-
-
-### tac（反向列示）
-
-```powershell
-[root@study ~]# tac /etc/issue
-```
-
-
-
-## 2. 可翻页查看
-
-
-
-### more（一页一页翻动）
-
-```powershell
-[root@study ~]# more /etc/man_db.conf
-```
-
-在 more 这个程序的运行过程中，你有几个按键可以使用：
-
-* **`空格键（space）：代表向下翻一页`** 
-* **`Enter：代表向下翻一行`** 
-* **`/字符串：代表在这个显示的内容当中，向下查找字符串这个关键词`** 
-* **`q：代表立刻离开 more，不再显示该文件内容`** 
-* **`b：代表往回翻页`**  
-
-
-
-### less（一页一页翻动）
-
-```powershell
-[root@study ~]# less /etc/man_db.conf
-```
-
-可以输入的命令有：
-
-* **`空格键：向下翻动一页`**
-* **`[pagedown]：向下翻动一页`**
-* **`[pageup]：向上翻动一页`** 
-* **`/字符串：向下查找字符串的功能`** 
-* **`?字符串：向上查找字符串的功能`** 
-* **`n：重复前一个查找`** 
-* **`N：反向的重复前一个查找`** 
-* **`g：前进到这个数据的第一行`** 
-* **`G：前进到这个数据的最后一行去`** 
-* **`q：离开 less 这个程序`** 
-
-
-
-## 5. 修改文件时间或创建新文件：touch
-
-```powershell
-[root@study ~]# touch [-acdmt] 文件
-选项与参数：
--a：仅自定义 access time
--c：仅修改文件的时间，若该文件不存在则不建立新文件
-```
-
-
-
-
-
-# 6.4 文件与目录的默认权限与隐藏权限
-
-
-
-## 1. 文件默认权限：umask
-
-基本上，umask 就是指定目前用户在建立文件或目录时候的权限默认值，那么如何得知或设置 umask？它的指定条件以下面的方式来指定：
-
-```powershell
-[root@study ~]# umask
-0022  一般与权限有关的的后面三个数字
-
-[root@study ~]# umask -S
-u=rwx,g=rx,o=rx
-```
-
-   
-
-1. 若用户建立为文件则默认没有可执行（x）权限，即只有 rw 这两个项目，也就是最大为 **`666`** ，默认权限如下：
-
-```powershell
--rw-rw-rw-
-```
-
-2. 若用户建立为目录，则由于 x 与是否可以进入此目录有关，因为默认为所有权限均开放，即 **`777`** ，默认权限如下：
-
-```powershell
-drwxrwxrwx
-```
-
-
-
-要注意的是，umask 的数字指的是 **`该默认值需要减掉的权限`** 。如果以上面的例子来说明的话，因为 umask 为 022，所以 user 并没有被拿掉任何权限，不过 group 与 others 的权限被拿掉了 2（也就是 w 这个权限），那么当用户：
-
-* **`建立文件时：（-rw-rw-rw-）- （-----w--w-）= -rw-r--r--`** 
-* **`建立目录时：（drwxrwxrwx）-（d----w--w-）= drwxr-xr-x`**  
 
