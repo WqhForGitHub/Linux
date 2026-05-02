@@ -561,14 +561,57 @@ Try 'rm --help' for more information.
 
 直接查看一个文件的内容可以使用 cat/tac/nl 这几个命令。
 
-- cat
+### ◆ cat
 ```shell
 [root@study ~]# cat [-AbEnTv]
 
 选项与参数
 -A: 相当于 -vET 的整合选项，可列出一些特殊字符而不是空白而已。
 -b：列出行号，仅针对非空白行做行号显示，空白行不标行号。
+-E：将结尾的换行符 $ 显示出来。
+-n：打印出行号，连同空白行也会有行号，与 -b 的选项不同。
+-T：将 [tab] 按键以 ^I 显示出来。
+-v：列出一些看不出来的特殊字符。
+
+范例一：查看 /etc/issue 这个文件的内容。
+[root@study ~]# cat /etc/issue
+\S
+Kernel \r on an \m
+
+范例二：承上题，如果还要打印行号？
+[root@study ~]# cat -n /etc/issue
+1 \S
+2 Kernel \r on an \m
+3
+# 所以这个文件有三行，看到了吧，可以列出行号。这对于大文件要找某个特定的行时，有点用处。
+# 如果不想要显示空白行的行号，可以使用 [cat -b /etc/issue]，自己测试看看。
+
+范例三：将 /etc/man_db.conf 的内容完整的显示出来（包含特殊字符）。
+[root@study ~]# cat -A /etc/man_db.conf
+# $
+......（中间省略）......
+MANPATH_MAP^I/bin^I^I^I/usr/share/man$
+MANPATH_MAP^I/usr/bin^I^I^I/usr/share/man$
+MANPATH_MAP^I/sbin^I^I^I/usr/share/man$
+MANPATH_MAP^I/usr/sbin^I^I^I/usr/share/man$
+......（下面省略）......
+# 上面的结果限于篇幅，鸟哥删除掉很多数据。另外，输出的结果并不会有特殊字体，
+# 鸟哥上面的特殊字体是要让您发现差异点在哪里，基本上，在一般的环境中，
+# 使用 [tab] 与空格键的效果差不多，都是一堆空白。我们无法知道两者的差别。
+# 此时使用 cat -A 就能够发现哪些空白的地方是啥鬼东西了。[tab] 会以 ^I 表示，换行符则是以 $ 表示。
+# 所以你可以发现每一行后面都是 $，不过换行符在 Windows/Linux 则不太相同，Windows 的换行符是 ^M$。
+# 这部分我们会在第九章 vim 软件的介绍时，再次说明。
 ```
+嘿嘿，Linux 里面有猫命令？不是的，cat 是 Concatenate（串联）的简写，主要的功能是将一个文件的内容连续打印在屏幕上面。例如上面的例子中，我们将 /etc/issue 打印出来，如果加上 -n 或 -b 的话，则每一行前面还会加上行号。
+鸟哥个人比较少用 cat。毕竟当你的文件内容的行数超过 40 行以上，根本来不及在屏幕上看到结果。所以，配合等一下要介绍的 more 或是 less 来执行比较好。此外，如果是一般的 DOS 文件时，就需要特别留意一些奇怪的符号了，例如换行与 `[Tab]` 等要显示出来，就得加入 -A 之类的选项。
+### ◆ tac（反向列示）
+```shell
+[root@study ~]# tac /etc/issue
+Kernel \r on an \m
+\S
+# 与刚刚上面的范例一比较，是由最后一行先显示。
+```
+tac 这个好玩了。怎么说？详细看一下，cat 与 tac，有没有发现？对，tac 刚好是将 cat 反写过来，所以它的功能就跟 cat 相反，cat 是由第一行到最后一行连续显示在屏幕上，而 tac 则是由最后一行到第一行反向在屏幕上显示出来，很好玩吧。
 
 
 
@@ -584,5 +627,3 @@ Try 'rm --help' for more information.
 
 
 
-
-[^1]: 
