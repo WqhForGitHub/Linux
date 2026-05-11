@@ -211,6 +211,116 @@ chmod，u、g、o、a，+（加入）-（移除）=（设置），rwx，文件�
 因此 FHS 标准建议：**根目录（/）所在分区应该越小越好，且应该程序所安装的软件最好不要与根目录放在同一个分区内，保持根目录越小越好。如此不但性能较佳，根目录所在的文件系统也较不容易发生问题**。
 有鉴于上述的说明，因此 FHS 定义出根目录（/）下面应该要有下面这些子目录的存在才好，即使没有物理目录，FHS 也希望至少有链接（link）目录存在才好。
 
+| 目录 | 应放置文件内容 |
+| --- | --- |
+| /bin | 系统有很多存放执行文件的目录，但 /bin 比较特殊。因为 /bin **放置的是在单人维护模式下还能够被使用的命令**。在 /bin 下面的命令可以被 root 与一般账号所使用，主要有：cat、chmod、chown、date、mv、mkdir、cp、bash 等常用的命令 |
+| /boot | 这个目录主要在放置启动会使用到的文件，包括 Linux 内核文件以及启动选项与启动所需配置文件等。Linux **内核常用的文件名为**：wmlinuz，如果使用的是 grub2 这个启动引导程序，则还会存在 /boot/grub2/ 这个目录。|
+| /dev | 在 Linux 系统上，任何设备与接口设备都是以文件的形式存在于这个目录当中。你只要通过读写这个目录下面的某个文件，就等于读写某个设备，比较重要的文件有 /dev/null、/dev/zero、/dev/tty、/dev/loop*、/dev/sd* 等 |
+| /etc | 系统主要的配置文件几乎都放置在这个目录内，例如人员的账号密码文件、各种服务的启动文件等。一般来说，这个目录下的各文件属性是可以让一般用户用户查看的，但是只有 root 有权力修改。FHS 建议不要放置可执行文件（binary）在这个目录中。比较重要的文件有：/etc/modprobe.d/、/etc/passwd、/etc/fstab、/etc/issue 等。另外 FHS 还规范几个重要的目录最好要存在 /etc/ 目录下：<br> - /etc/opt（必要）：这个目录在放置第三方辅助软件 /opt 的相关配置文件 <br> - /etc/X11/（建议）：与 X Window 有关的各种配置文件都在这里，尤其是 xorg.conf 这个 X Server 的配置文件 <br> - /etc/sgml/（建议）：与 SGML 格式有关的各项的配置文件 <br> - /etc/xml/（建议）：与 XML 格式有关的各项配置文件 |
+| /lib | 系统的函数库非常多，而 /lib **放置的则是在启动时会用到的函数库**，**以及在 /bin 或 /sbin 下面的命令会调用的函数库而已**。什么是函数库？你可以将它想成是外挂，某些命令必须要有这些外挂才能够顺利完成程序的执行之意，另外 FSH 还要求下面的目录必须要存在：<br> - /lib/modules/：这个目录主要放置可抽换式的内核相关模块（驱动程序） |
+| /media | media 是媒体的英文，顾名思义，这个 /media **下面放置的就是可删除的设备**，包括软盘、光盘、DVD 等设备都暂时挂载于此。常见的文件名有：/media/floppy、/media/cdrom 等 |
+| /mnt | 如果你想要暂时挂载某些额外的设备，一般建议你可以放置到这个目录中。在早些时候，这个目录的用途与 /media 相同。只是有了 /media 之后，这个目录就暂时用来挂载 |
+| /opt | 这个是给**第三方辅助软件放置的目录**。什么是第三方辅助软件？举例来说，KDE 这个桌面管理系统是一个独立的软件，不过它可以安装到 Linux 系统中，因此 KDE 的软件就建议放置到此目录下。另外，如果你需要自行安装额外的软件（非原本的发行版提供），那么也能够将你的软件安装到这里来。不过，以前的 Linux 系统中，我们还是习惯放置在 /usr/local 目录下 |
+| /run | 早期的 FHS 规定系统启动后所产生的各项信息应该要放置到 /var/run 目录下，新版的 FHS 则规范到 /run 下面，由于 /run 可以使用内存来模拟，因此性能上会好很多 |
+| /sbin | Linux 有非常多命令是用来设置系统环境的，这些命令只有 root 才能够用来设置系统，其他用户最多只能用来查询而已。**放在 /sbin 下面的为启动过程中所需要的，里面包括了启动、修复、还原系统所需要的命令**。至于某些服务器软件程序，一般则放置到 /usr/sbin/ 当中。至于本机自行安装的软件所产生的系统执行文件（system binary），则放置到 /usr/local/sbin/ 当中了。常见的命令包括：fdisk、fsck、ifconfig、mkfs 等 |
+| /srv | srv 可以视为 service 的缩写，是一些网络服务启动之后，这些服务所需要使用的数据目录，常见的服务例如 WWW、FTP 等。举例来说，WWW 服务器需要的网页数据就可以放置在 /srv/www/ 里面。不过，系统的服务数据如果尚未要提供给因特网任何人浏览的话，默认还是建议放置到 /var/lib 下面即可 |
+| /tmp | 这是让一般用户或是正在执行的程序暂时放置文件的地方。这个目录是任何人都能够存取的，所以你需要定期地清理一下。当然，重要数据不可放置在此目录。因为 FHS 甚至建议在启动时，应该要将 /tmp 下的数据都删除。 |
+| /usr | 第二层 FHS 设置，后续介绍 |
+| /var | 第二层 FHS 设置，主要为放置变动性的数据，后续介绍 |
+| /home | 这是系统默认的用户家目录（home directory）。在你新增一个一般用户账号时，默认的用户家目录都会规范到这里来，比较重要的是家目录有两种代号：<br> - ~：代表目前这个用户的家目录 <br> - ~dmtsai：则代表 dmtsai 的家目录 |
+| /lib | 用来存放与 /lib 不同的格式的二进制函数库，例如支持 64 位的 /lib64 函数库等 |
+| /root | 系统管理员（root）的家目录，之所以放在这里，是因为如果进入单人维护模式而仅挂载根目录时，该目录就能够拥有 root 的家目录，所以我们会希望 root 的家目录与根目录放置在同一个分区中 |
+| /lost+found | 这个目录是使用标准的 ext2、ext3、ext4 文件系统格式才会产生的一个目录，目的在于当文件系统发生错误时，将一些遗失的片段放置到这个目录下，不过如果使用的是 xfs 文件系统的话，就不会存在这个目录 |
+| /proc | 这个目录本身是一个虚拟文件系统（virtual filesystem），它放置的数据都是在内存当中，例如系统内核、进程信息（process）、外接设备的状态及网络状态等。因为这个目录下的数据都是在内存当中，所以本身不占任何硬盘空间。比较重要的文件例如：/proc/cpuinfo、/proc/dma、/proc.interrupts、/proc/ioports、/proc/net/* 等 |
+| /sys | 这个目录其实跟 /proc 非常类似，也是一个虚拟的文件系统，主要也是记录内核与系统硬件信息相关的内容。包括目前已加载的内核模块与内核检测的硬件设备信息等，这个目录同样不占硬盘容量 |
+
+#### ◆ /usr 的意义与内容
+
+| 目录 |  应放置文件内容  |
+| --- | --- |
+| /usr/bin/ | 所有一般用户能够使用的命令都放在这里。目前新的 CentOS 7 已经将全部的用户命令放置于此，而使用链接文件的方式将 /bin 链接至此。也就是说，/usr/bin 与 /bin 是一模一样的。另外，FHS 要求在此目录下不应该有子目录 |
+| /usr/lib/ | 基本上，与 /lib 功能相同，所以 /lib 就是链接到此目录中的 |
+| /usr/local/ | 系统管理员在本机安装自己下载的软件（非发行版默认提供者），建议安装到此目录，这样会比较便于管理。举例来说，你的发行版提供的软件较旧，你想安装较新的软件但又不想删除旧版，此时你可以将新版软件安装于 /usr/local/ 目录下，可与原先的旧版软件有分别。你可以自行到 /usr/local 去看看，该目录下也是具有 bin、etc、include、lib... 的子目录 |
+| /usr/sbin/ | 非系统正常运行所需要的系统命令，最常见的就是某些网络服务器软件的服务命令（daemon）。不过基本功能与 /sbin 也差不多，因此目前 /sbin 就是链接到此目录中的 |
+| /usr/share/ | 主要放置只读的数据文件，当然也包括共享文件，在这个目录下放置的数据几乎是不分硬件架构均可读取的数据，因为几乎都是文本文件。在此目录下常见的还有这些子目录：<br> - /usr/share/man：在线帮助文件 <br> - /usr/share/doc：软件的说明文档 <br> - /usr/share/zoneinfo：与时区有关的时区文件 |
+| /usr/games/ | 与游戏比较相关的数据放置处 |
+| /usr/include/ | c/c++等程序语言的头文件（header）与包含文件（include）放置处，当我们以 Tarball 方式（.tar.gz 的方式安装软件）安装某些程序时，会使用到里面的许多文件 |
+| /usr/libexec/ | **某些不被一般用户常用的执行文件或脚本**（script）等，都会放置在此目录中。例如大部分的 X 窗口下面的操作命令，很多都是放在此目录下 |
+| /usr/lib | 与 /lib 功能相同，因此目前 /lib 就是链接到此目录中 |
+| /usr/src/ | 一般源代码建议放置到这里，src 有 source 的意思。至于内核源代码则建议放置到 /usr/src/Linux/ 目录下 |
+
+#### ◆ /var 的意义与内容
+
+| 目录 | 应放置文件内容 |
+| --- | --- |
+| /var/cache/ | 应用程序本身运行过程中会产生的一些缓存 |
+| /var/lib/ | 程序本身执行的过程中，需要使用到的数据文件放置的目录。在此目录下各自的软件应该要有各自的目录。举例来说，MySQL 的数据库放置到 /var/lib/mysql/ 而 rpm 的数据库则放到 /var/lib/rpm 中 |
+| /var/lock/ | 某些设备或是文件资源一次只能被一个应用程序所使用，如果同时有两个程序使用该设备时，就可能产生一些错误的状况，因此就得要将该设备上锁（lock），以确保该设备只会给单一软件所使用。举例来说，刻录机正在刻录一张光盘，你想一下会不会有两个人同时在使用一个刻录机刻盘？如果两个人同时刻录，那光盘写入的是谁的数据？所以当第一个人在刻录时刻录机就会被上锁，第二个人就得要该设备被解除锁定（就是前一个人用完了）才能够继续使用，目前此目录也已经挪到 /run/lock 中 |
+| /var/log/ | 重要到不行。这是日志文件放置的目录，里面比较重要的文件有 /var/log/messages、/var/log/wtmp（记录登录信息）等 |
+| /var/mail/ | 放置个人电子邮箱的目录，不过这个目录也被放置到 /var/spool/mail/ 目录中，通常这两个目录是互为链接文件 |
+| /var/run/ | 某些程序或是服务启动后，会将它们的 PID 放置在这个目录下，至于 PID 的意义我们会在后续章节提到，与 /run 相同，这个目录链接到 /run 目录 |
+| /var/spool/ | 这个目录通常放置一些队列数据，所谓的队列就是排队等待其他程序使用的数据，这些数据被使用后通常会删除。举例来说，系统收到新邮件会放置到 /var/spool/mail 中，但用户收下该邮件后该封信原则上就会被删除，邮件如果暂时寄不出去会被放到 /var/spool/mqueue/ 中，等到被送出后就被删除。如果是计划任务数据（crontab），就会被放置到 /var/spool/cron/ 目录中 |
+
+## 5.3.2 目录树（directory tree）
+```shell
+[dmtsai@study ~]# ls -l /                                                
+total 2035816                                                                      
+lrwxrwxrwx   1 root root          7 Apr 22  2024 bin -> usr/bin                    
+drwxr-xr-x   2 root root       4096 Feb 26  2024 bin.usr-is-merged                 
+drwxr-xr-x   3 root root       4096 Feb 28 12:07 boot                              
+dr-xr-xr-x   2 root root       4096 Apr 23  2024 cdrom                             
+drwxr-xr-x   2 root root       4096 Apr 29  2024 data                              
+drwxr-xr-x  19 root root       3960 May  5 11:14 dev                               
+drwxr-xr-x 118 root root      12288 May  5 16:41 etc                               
+drwxrwxrwx   4 root root       4096 May  5 11:14 home                              
+lrwxrwxrwx   1 root root          7 Apr 22  2024 lib -> usr/lib                    
+lrwxrwxrwx   1 root root          9 Apr 22  2024 lib64 -> usr/lib64                
+drwxr-xr-x   2 root root       4096 Feb 26  2024 lib.usr-is-merged                 
+drwx------   2 root root      16384 Apr 26  2024 lost+found                        
+drwxr-xr-x   2 root root       4096 Apr 23  2024 media                             
+drwxr-xr-x   2 root root       4096 Apr 23  2024 mnt                               
+drwxr-xr-x   3 root root       4096 May  5 11:26 opt                               
+dr-xr-xr-x 211 root root          0 May  5 11:14 proc                              
+drwx------   7 root root       4096 May  8 22:06 root                              
+drwxr-xr-x  35 root root       1260 May 10 21:58 run                               
+lrwxrwxrwx   1 root root          8 Apr 22  2024 sbin -> usr/sbin                  
+drwxr-xr-x   2 root root       4096 Apr  3  2024 sbin.usr-is-merged                
+drwxr-xr-x   2 root root       4096 Apr 26  2024 snap                              
+drwxr-xr-x   2 root root       4096 Apr 23  2024 srv                               
+-rw-------   1 root root 2084569088 Apr 26  2024 swap.img                          
+dr-xr-xr-x  13 root root          0 May  8 12:19 sys                               
+drwxrwxrwt  17 root root      12288 May 10 21:58 tmp                               
+drwxr-xr-x  13 root root       4096 May  8 20:16 usr                               
+drwxr-xr-x  14 root root       4096 May  5 16:41 var
+```
+
+## 5.3.3 绝对路径与相对路径
+
+除了需要特别注意的 FHS 目录配置外，在文件名部分我们也要特别注意。因为根据文件名写法的不同，也可将所谓的路径（path）定义为绝对路径（absolute）与相对路径（relative）。这两种文件名/路径的写法依据是这样的：
+
+◆ 绝对路径：由根目录（/）开始写起的文件名或目录名称，例如 /home/dmtsai/.bashrc
+◆ 相对路径：相对于目前路径的文件名写法，例如 ./home/dmtsai 或 ../../home/dmtsai/ 等，反正开头不是 / 就属于相对路径的写法。
+而你必须要了解，相对路径是以你当前所在路径的相对位置来表示的。举例来说，你目前在 /home 这个目录下，如果想要进入 /var/log 这个目录时，可以怎么写？
+1. cd /car/log（absolute）
+2. cd ../var/log（relative）
+
+![目录树架构示意图](https://linux-1257950569.cos.ap-guangzhou.myqcloud.com/%E9%B8%9F%E5%93%A5%E7%9A%84%20Linux%20%E7%A7%81%E6%88%BF%E8%8F%9C%EF%BC%88%E5%9F%BA%E7%A1%80%E5%AD%A6%E4%B9%A0%E7%AF%87%EF%BC%89%E7%AC%AC%E5%9B%9B%E7%89%88/%E7%AC%AC5%E7%AB%A0%EF%BC%9ALinux%20%E7%9A%84%E6%96%87%E4%BB%B6%E6%9D%83%E9%99%90%E4%B8%8E%E7%9B%AE%E5%BD%95%E9%85%8D%E7%BD%AE/%E7%9B%AE%E5%BD%95%E6%A0%91%E6%9E%B6%E6%9E%84%E7%A4%BA%E6%84%8F%E5%9B%BE.png)
+
+因为你在 /home 下面，所以要回到上一层（../）之后，才能继续往 /var 来移动。特别注意这两个特殊的目录：
+◆ .：代表当前的目录，也可以使用 ./ 来表示
+◆ ..：代表上一层目录，也可以使用 ../ 来代表
+这个 . 与 .. 是很重要的目录概念，你常常会看到 cd .. 或 ./command 之类的命令执行方式，就是代表上一层与目前所在目录的工作状态，这是很重要的概念。
+
+## 5.3.4 CentOS 的观察
+```shell
+[dmtsai@study ~]# uname -r # 查看内核版本
+6.8.0-101-generic
+
+[dmtsai@study ~]# uname -m # 查看操作系统的架构版本
+x86_64
+```
+
+
 
 
 
