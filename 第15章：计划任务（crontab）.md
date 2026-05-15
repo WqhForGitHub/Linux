@@ -1,3 +1,45 @@
+# 15.1 什么是计划任务
+## 15.1.1 Linux 计划任务的种类：at、cron
+
+从上面的说明当中，我们可以很清楚地发现两种计划任务的方式。
+◆ 一种是例行性的，就是每隔一定的周期要来办的事项。
+◆ 一种是突发性的，就是这次做完以后就没有的那一种。
+	那么在 Linux 下面如何实现这两个功能？那就得使用 at 与 crontab 这两个好东西。
+ ◆ at：at 是个可以处理仅执行一次就结束的命令，不过要执行 at 时，必须要有 atd 这个服务（第 17 章）的支持才行。在某些新版的 Linux 发行版中，atd 可能默认并没有启动，那么 at 这个命令就会失效，不过我们的 CentOS 默认是启动的。
+ ◆ crontab：crontab 这个命令所设置的任务将会循环地一直执行下去，可循环的时间为分钟、小时、每周、每月或每年等。crontab 除了可以使用命令执行外，亦可编辑 /etc/crontab 来支持，至于让 crontab 可以生效的服务则是 crond。
+ 下面我们先来谈一谈 Linux 的系统到底在做什么事情，怎么有若干计划任务在执行呢？然后再回来谈一谈 at 与 crontab 这两个好东西。
+
+# 15.2 仅执行一次的计划任务
+
+首先，我们先来谈谈单一计划任务的运行，那就是 at 这个命令的运行。
+
+## 15.2.1 atd 的启动与 at 运行的方式
+
+要使用单一计划任务时，我们的 Linux 系统上面必须要有负责这类计划的服务，那就是 atd 这个服务。不过并非所有的 Linux 发行版都默认启动，所以，某些时刻我们必须要手动将它启动才行。启动的方法很简单，就是这样：
+```shell
+[root@study ~]# systemctl restart atd # 重新启动 atd 这个服务。
+[root@study ~]# systemctl enable atd # 让这个服务开机就自动启动。
+[root@study ~]# systemctl status atd # 查看一下 atd 目前的状态
+● atd.service - Deferred execution scheduler                                       
+     Loaded: loaded (/usr/lib/systemd/system/atd.service; enabled; preset: enabled)                                                                           
+     Active: active (running) since Fri 2026-05-15 21:51:18 CST; 43s ago           
+       Docs: man:atd(8)                                                            
+   Main PID: 110200 (atd)                                                          
+      Tasks: 1 (limit: 4296)                                                       
+     Memory: 256.0K (peak: 1.5M)                                                   
+        CPU: 7ms                                                                   
+     CGroup: /system.slice/atd.service                                             
+             └─110200 /usr/sbin/atd -f                                             
+May 15 21:51:18 VM-0-4-ubuntu systemd[1]: Starting atd.service - Deferred execution scheduler...                                                             
+May 15 21:51:18 VM-0-4-ubuntu systemd[1]: Started atd.service - Deferred execution scheduler.
+```
+重点就是要看到上表中的特殊字体，包括【enabled】以及【running】时，这才是 atd 真的在运行的意思，这部分我们在第 17 章会谈及。
+
+### ◆ at 的运行方式
+
+既然是计划任务，那么应该会有产生任务的方式，并且将这些任务排进计划表中。OK，那么产生任务的方式是怎么执行的呢？事实上，**我们使用 at 这个命令来产生所要运行的任务，并将这个任务以文本文件的方式写入/var/spool/at/目录内，该任务便能等待 atd 这个服务的使用与执行了**，就这么简单。
+
+
 
 
 
