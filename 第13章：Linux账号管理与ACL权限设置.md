@@ -540,6 +540,10 @@ uid=1003（vbird1）gid=1004（vbird1）groups=1004（vbird1）...
 [vbird1@study ~]# grep testgroup /etc/group
 testgroup:x:1503:vbird1:vbird3
 ```
+很有趣的一个小实验吧，我们可以让 testgroup 成为一个可以公开的用户组，然后建立起用户组管理员，用户组管理员可以有多个。在这个案例中，我将 vbird1 设置为 testgroup 的用户组管理员，所以 vbird1 就可以自行增加用户组成员。然后，该用户组成员就能够使用 newgrp。
+
+
+
 
 
 
