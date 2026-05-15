@@ -285,15 +285,69 @@ BAD PASSWORD: The password is shorter than 8 characters <==密码太简单或过
 Retype new UNIX password: <==再输入一次同样的密码。
 passwd: all authentication tokens updated successfully. <==竟然还是成功修改了。
 ```
+root 果然是最伟大的人物。当我们要设置用户密码时，通过 root 来设置即可。root 可以设置各式各样的密码，系统几乎一定会接受。所以您看看，如同上面的范例一，明明鸟哥输入的密码太短了，但是系统依旧可接受 vbird2 这样的密码设置。这个是 root 帮忙设置的结果，那如果是用户自己要改密码呢？包括 root 也是这样修改的。
+```shell
+范例二：用 vbird2 登录后，修改 vbird2 自己的密码。
+[vbird2@study ~]# passwd <==后面没有加账号，就是改自己的密码。
+Changing password for user vbird2.
+Changing password for vbird2
+（current）UNIX password: <==这里输入【原有的旧密码】。
+New UNIX password: <== 这里输入新设的密码。
+BAD PASSWORD: The password fails the dictionary check - it is based on a dictionary word
+# 同样的，密码设置在字典里面找的到该字符，所以也是不建议，无法通过。
+New UNIX password: <== 这里再想个新的密码来输入吧。
+Retype new UNIX password: <==通过密码验证，所以重复这个密码的输入。
+passwd: all authentication tokens updated successfully. <==有无成功看关键字。
+```
+passwd 的使用真的要很注意，尤其是 root 先生。鸟哥在课堂上每次讲到这里，说到要帮自己的一般账号建立密码时，经常有一小部分学生会忘记加上账号名，结果就变成修改 root 自己的密码，最后，root 密码就这样不见了。唉，**要帮一般账号建立密码需要使用【passwd 账号】的格式，使用【passwd】表示修改自己的密码**。拜托，千万不要改错。
+与 root 不同的是，一般账号在修改密码时需要先输入自己的旧密码（即 current 那一行），然后再输入新密码（New 那一行）。要注意的是，密码的规范是非常严格的，尤其新的 Linux 发行版大多使用 PAM 模块来进行密码的校验，包括太短、密码与账号相同、密码为字典常见字符串等，都会被 PAM 模块检查出来而拒绝修改密码。此时会再重复出现【New】这个关键词，那时请再想个新密码。若出现【Retype】才是你的密码被接受了，重复输入新密码并且看到【successfully】这个关键词时才是修改密码成功。
+>与一般用户不同的是，root 不需要知道旧密码就能够帮用户或 root 自己建立新密码。但如此一来的困扰，就是如果你的亲密爱人老是告诉你【我的密码真难记，帮我设置简单一点】时，千万不要妥协，这是为了系统安全。
 
+为何用户设置自己的密码会这么麻烦？这是因为密码的安全性。如果密码设置太简单，一些有心人士就能够很简单地猜到你的密码，如此一来人家就可能使用你的一般账号登录你的主机或使用其他主机资源，对主机的维护会造成困扰。所以新的 Linux 发行版使用较严重的 PAM 模块来管理密码，这个模块的机制写在 /etc/pam.d/passwd 当中。而**该文件与密码有关的测试模块就是使用 pam_cracklib.so，这个模块会校验密码相关的信息，并且替换 /etc/login.defs 内的 PASS_MIN_LEN 的设置**。关于 PAM，我们在本章后面继续介绍，这里先谈一下，理论上，你的密码最好符合如下要求：
+- 密码不能与账号相同
+- 密码尽量不要选用字典里面会出现的字符串
+- 密码需要超过 8 个字符
+- 密码不要使用个人信息，如身份证、手机号码、其他电话号码等
+- 密码不要使用简单的关系式，如 1+1=2、lamvbird 等
+- 密码尽量使用大小写字符、数字、特殊字符（$、-、_ 等）的组合。
+为了方便系统管理，新版的 passwd 还加入了很多创意选项，鸟哥个人认为最好用的大概就是这个【--stdin】了。举例来说，你想要帮 vbird2 修改密码成为 abc543CC，可以这样执行命令。
+```shell
+范例三：使用 standard input 建立用户的密码。
+[root@study ~]# echo "abc543CC" | passwd --stdin vbird2
+Changing password for user vbird2.
+passwd: all authentication tokens updated successfully.
+```
+这个操作会直接更新用户的密码而不用再次手动输入。好处是方便处理，缺点是这个密码会保留在命令历史中，未来若系统被攻击，人家可以在 /root/.bash_history 找到这个密码。所以这个操作通常仅在通过 shell 脚本大量建立用户账号时使用。要注意的是，这个选项并不存在所有 Linux 发行版中，请通过 man passwd 确认你使用的 Linux 发行版是否支持此选项。
+如果你想要让 vbird2 的密码具有相当的规则，举例来说你要让 vbird2 每 60 天需要修改密码，密码过期后 10 天未使用就声明账号失效，那该如何处理？
+```shell
+范例四：管理 vbird2 的密码使具有 60 天修改、密码过期 10 天后账号失效的设置。
+[root@study ~]# passwd -S vbird2
+vbird2 PS 2015-07-20 0 ***** 7 -1（Password set, SHA512 crypt.）
+# 上面说明密码建立时间（2015-07-20）、0 最小天数、99999 修改天数、7 警告日数与密码不会失效（-1）
+[root@study ~]# passwd -x 60 -i 10 vbird2
+[root@study ~]# passwd -S vbird2
+vbird2 PS 2015-07-20 0 60 7 10（Password set, SHA512 crypt.）
+```
+那如果我想要让某个账号暂时无法使用密码登录主机？举例来说，vbird2 这家伙最近老是在主机上乱来，所以我想要暂时让它无法登录的话，最简单的方法就是让它的密码变成不合法（shadow 第 2 字段长度变掉），处理的方法就更简单。
+```shell
+范例五：让 vbird2 的账号失效，查看完毕后再让它失效。
+[root@study ~]# passwd -l vbird2
+[root@study ~]# passwd -S vbird2
+vbird2 L 2026-05-15 0 60 7 10（Password locked.）
+# 嘿嘿，状态变成【LK，Lock】了，无法登录
+[root@study ~]# grep vbird2 /etc/shadow
+vbird2:!$y$j9T$6J1RlLBDOtEr78CZHw9C0.$PZkUULH2U63uDvqIsC5iVjq5.pw2E6Gi2zCKpBkKCa5:20588:0:60:7:10::
+# 其实只是在这里加上!而已。
+[root@study ~]# passwd -u vbird2
+[root@study ~]# grep vbird2 /etc/shadow
+vbird2:$y$j9T$6J1RlLBDOtEr78CZHw9C0.$PZkUULH2U63uDvqIsC5iVjq5.pw2E6Gi2zCKpBkKCa5:20588:0:60:7:10::
+# 密码栏位恢复正常
+```
+是否很有趣？可以自行管理一下你的账号的密码相关参数，接下来让我们用更简单的方法来查看密码参数。
 
+### ◆ chage
 
-
-
-
-### chage
-
-```powershell
+```shell
 [root@study ~]# chage [-ldEImMW] 账号名
 选项与参数：
 -l：列出该账号的详细密码参数
@@ -303,13 +357,34 @@ passwd: all authentication tokens updated successfully. <==竟然还是成功修
 -m：后面接天数，修改 shadow 第四栏位（密码最短保留天数）
 -M：后面接天数，修改 shadow 第五栏位（密码多久需要进行修改）
 -W：后面接天数，修改 shadow 第六栏位（密码过期前警告日期）
+范例一：列出 vbird2 的详细密码参数。
+[root@study ~]# chage -l vbird2
+Last password change                                    : May 15, 2026             
+Password expires                                        : Jul 14, 2026             
+Password inactive                                       : Jul 24, 2026             
+Account expires                                         : never                    
+Minimum number of days between password change          : 0                        
+Maximum number of days between password change          : 60                       
+Number of days of warning before password expires       : 7
 ```
+我们在 passwd 的介绍中谈到了处理 vbird2 这个账号的密码属性流程，使用 passwd -S 却无法看到很清楚的说明，但使用 chage 可就明白多了。如上表所示，我们可以清楚地知道 vbird2 地详细参数。如果想要修改其他地设置值，就自己参考上面的选项，或自行 man chage 一下吧。
+chage 有一个功能很不错，如果你想要让【用户在第一次登录时，强制它们一定要修改密码后才能够使用系统资源】，可以利用如下的方法来处理。
+```shell
+范例二：建立一个名为 vbird2 的账号，该账号第一次登录后使用默认密码，但必须要修改过密码后，使用新密码才能够登录系统使用 bash 环境。
+[root@study ~]# useradd vbird2
+[root@study ~]# echo "vbird2" | passwd --stdin vbird2
+[root@study ~]# chage -d 0 vbird2
+[root@study ~]# chage -l vbird2 | head -n 3
+Last password change                                    : password must be changed 
+Password expires                                        : password must be changed 
+Password inactive                                       : password must be changed
+# 此时此账号的密码建立时间会被改为 1970/1/1，所以会有问题。
+```
+非常有趣吧，你会发现 vbird2 这个账号在第一次登录时可以使用与账号同名的密码登录，但登录时就会被要求立刻修改密码，修改密码完成后就会被踢出系统，再次登录时就能够使用新密码登录了。这个功能对学校老师非常有帮助。因为我们不想要知道学生的密码，那么在初次上课时就可以使用与学号相同的账号密码给学生，让他们登录时自行设置自己的密码，如此一来既能够避免其他同学随意使用别人的账号，也能够保证学生知道如何修改自己的密码。
 
+### ◆ usermod
 
-
-### usermod
-
-```powershell
+```shell
 [root@study ~]# usermod [-cdegGlsuLU] username
 选项与参数：
 -c：后面接账号说明，即 /etc/passwd 第五栏的说明栏，可以加入一些账号的说明
@@ -325,93 +400,153 @@ passwd: all authentication tokens updated successfully. <==竟然还是成功修
 -L：暂时将使用者的密码冻结，让它无法登录，其实仅修改 /etc/shadow 的密码栏
 -U：将 /etc/shadow 密码栏的感叹号（！）拿掉，解锁
 ```
-
-
-
-### userdel
-
-```powershell
-[root@study ~]# userdel [-r] username
-选项与参数：
--r：连同使用者的家目录也一起删除
-
-
-删除 vbird2，连同家目录一起删除
-[root@study ~]# userdel -r vbird2
+如果你仔细地比对，会发现 usermod 的选项与 useradd 非常类似，这是因为 usermod 也是用来微调 useradd 增加的用户参数。不过 usermod 还是有新增的选项，那就是 -L 与 -U。不过这两个选项其实与 passwd 的 -l 以及 -u 是相同的，而且也不见得会存在于所有的 Linux 发行版当中。接下来，让我们谈谈一些修改参数的实例吧。
+```shell
+范例一：修改使用者 vbird2 的说明栏，加上【VBird test】的说明。
+[root@study ~]# usermod -c "VBirds test" vbird2
+[root@study ~]# grep vbird2 /etc/passwd
+vbird2:x:1002:1003:VBirds test:/home/vbird2:/bin/sh
+范例二：使用者 vbird2 这个账号在 2015/12/31 失效。
+[root@study ~]# usermod -e "2015-12-31" vbird2
+[root@study ~]# chage -l vbird2 | grep 'Account expires'
+Account expires                                         : Dec 31, 2015
+范例三：我们建立 vbird3 这个系统账号时并没有设置家目录，请建立它的家目录。
+[root@study ~]# ll -d ~vbird3
+ls: cannot access /home/vbird3: No such file or directory <==确认一下，确实没有家目录的存在。
+[root@study ~]# cp -a /etc/skel /home/vbird3
+[root@study ~]# chown -R vbird3:vbird3 /home/vbird3
+[root@study ~]# chmod 700 /home/vbird3
 ```
 
+### ◆ userdel
 
+这个功能就太简单了，目的在删除用户的相关数据，而用户的数据有：
+- 用户账号/密码相关参数：/etc/passwd、/etc/shadow
+- 用户组相关参数：/etc/group、/etc/gshadow
+- 用户个人文件数据：/home/username、/var/spool/mail/username
+这个命令的语法非常简单：
+```shell
+[root@study ~]# userdel [-r] username
+选项与参数：
+-r：连同使用者的家目录也一起删除。
+范例一：删除 vbird2，连同家目录一起删除。
+[root@study ~]# userdel -r vbird2
+```
+执行这个命令的时候要小心了。通常我们要删除一个账号的时候，可以手动将 /etc/passwd 与 /etc/shadow 里面的该账号取消。一般而言，如果该账号只是【暂时不可用】的话，那么将 /etc/shadow 里面的账号失效日期（第八字段）设置为 0 就可以让该账号无法使用，但是所有跟该账号相关的数据都会留下来。使用 userdel 的时机通常是【你真的确定不要让该用户在主机上面使用任何数据了】。
+另外，如果用户在系统上面操作过一阵子了，那么该用户其实在系统内可能会含有其他文件。举例来说，他的邮箱（mailbox）或是计划任务（crontab，第 15 章）之类的文件。所以，如果想要将某个账号完整删除，最好在执行 userdel -r username 之前，先用【find / -user username】查出整个系统内属于 username 的文件，然后再加以删除吧。
 
+## 13.2.2 用户功能
 
+useradd、usermod、userdel 都是系统管理员所能够使用的命令，如果我是一般身份用户，那么我是否除了密码之外，就无法修改其他的数据？当然不是。这里我们介绍几个一般身份用户常用的账号数据修改与查询命令。
 
-## 3. 新增与删除用户组
+### ◆ id
 
+id 这个命令可以查询某人或自己的相关 UID/GID 等信息，它的参数也不少，不过，都不需要记，反正使用 id 时就全部都列出来了。另外，也回想一下，我们在前一章谈到循环时，就用过这个命令：
+```shell
+[root@study ~]# id [username]
+范例一：查看 root 自己相关 ID 信息。
+[root@study ~]# id
+uid=0(root) gid=0(root) groups=0(root)
+范例二：查看一下 vbird1 吧
+[root@study ~]# id vbird1
+uid=1002(vbird2) gid=1003(vbird2) groups=1003(vbird2)
+[root@study ~]# id vbird100
+id: vbird100: no such user <== id 这个命令也可以用来判断系统上面有无某账号。
+```
 
+## 13.2.3 新增与删除用户组
 
-### groupadd
+OK，了解了账号的新增、删除、修改与查询后，再来我们可以聊一聊用户组的相关内容了。基本上，用户组的内容都与这两个文件有关：/etc/group、/etc/gshadow。用户组的内容其实很简单，都是上面两个文件的新增、修改与删除而已。不过，如果再加上有效用户组的概念，那么 newgrp 与 gpasswd 则不可不知。
 
-```powershell
+### ◆ groupadd
+
+```shell
 [root@study ~]# groupadd [-g gid] [-r] 用户组名称
 选项与参数：
 -g：后面接某个特定的 GID，用来直接设置某个 GID
--r：建立系统用户组
-
-
+-r：建立系统用户组，与 /etc/login.defs 内的 GID_MIN 有关。
+范例一：新建一个用户组，名称为 group1。
 新建一个用户组，名称为 group1
 [root@study ~]# groupadd group1
+/etc/group:group1:x:1004:                                                          
+/etc/gshadow:group1:!::
+# 用户组的 GID 也是会由 1000 以上最大 GID+1 来决定。
 ```
+曾经有某些版本的教育培训手册谈到，为了让用户的 UID/GID 成对，它们建议**新建与用户私有用户组无关的其他用户组时，使用小于 1000 的 GID 为宜**。也就是说，如果要建立用户组的话，最好能够使用【groupadd -r 用户组名】的方式。不过，这见仁见智，看你自己的抉择。
 
+### ◆ groupmod
 
-
-### groupmod
-
-```powershell
+跟 usermod 类似的，这个命令仅是在进行 group 相关参数的修改而已。
+```shell
 [root@study ~]# groupmod [-g gid] [-n group_name] 用户组名
 选项与参数：
 -g：修改既有的 GID 数字
 -n：修改既有的用户组名称
-
-
-将刚刚上个命令建立的 group1 名称改为 mygroup，GID 为 201
+范例一：将刚刚上个命令建立的 group1 名称改为 mygroup，GID 为 201。
 [root@study ~]# groupmod -g 201 -n mygroup group1
+[root@study ~]# grep mygroup /etc/group /etc/gshadow
+/etc/group:group1:x:1004:                                                          
+/etc/gshadow:group1:!::
 ```
+不过，还是那句老话，不要随意修改 GID，容易造成系统资源的错乱。
 
+### ◆ groupdel
 
-
-### groupdel
-
-```powershell
+呼呼，groupdel 自然就是用在删除用户组，用法很简单：
+```shell
 [root@study ~]# groupdel [groupname]
-
-
-将刚刚的 mygroup 删除
+范例一：将刚刚的mygroup删除。
 [root@study ~]# groupdel mygroup
+范例二：若要删除 vbird1 这个用户组的话？
+[root@study ~]# groupdel vbird1
 ```
+为什么 mygroup 可以删除，但是 vbird1 就不能删除？愿因很简单，【有某个账号（/etc/passwd）的初始用户组使用该用户组】。如果查看一下，你会发现在 /etc/passwd 内的 vbird1 第四栏的 GID 就是 /etc/group 内的 vbird1 那个用户组的 GID。所以，当然无法删除，否则 vbird1 这个用户登录系统后，就会找不到 GID，那可是会造成很大的困扰。那么如果硬要删除 vbird1 这个用户组呢？你【必须要确认 /etc/passwd 内的账号没有任何人使用该用户组作为初始用户组】才行。所以，你可以：
+- 修改 vbird1 的 GID。
+- 删除 vbird1 这个用户。
+### ◆ gpasswd：用户组管理员功能
 
-​                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
-
-
-
-
-
-
-
-# 13.4 用户身份切换
-
-
-
-## 1. su
-
-**`su 是最简单的身份切换命令，它可以进行任何身份的切换，方法如下：`**
-
-```powershell
-[root@study ~]# su [-lm] [-c 命令] [username]
+如果系统管理员太忙碌了，导致某些账号想要加入某个选项时找不到人帮忙，这个时候可以建立【用户组管理员】。什么是用户组管理员？就是让某个用户组具有一个管理员，这个用户组管理员可以管理哪些账号可以加入/移出该用户组。那要如何【建立一个用户组管理员】？就得要通过 gpasswd。
+```shell
+# 关于系统管理员（root）做的操作
+[root@study ~]# gpasswd groupname
+[root@study ~]# gpasswd [-A user1,...] [-M user3,...] groupname
+[root@study ~]# gpasswd [-rR] groupname
 选项与参数：
--：单纯使用 - 如 su - 代表使用 login-shell 的变量文件读取方式来登录系统。若使用者名称没有加上去，则代表切换为 root 的身份。
--l：与 - 类似，但后面需要加欲切换的使用者账号，也        是 login-shell 的方式。
--m：-m 与 -p 是一样的，表示使用目前的环境设置，而不读取新使用者的配置文件。
--c：仅进行一次命令，所以 -c 后面可以加上命令。
+  ：若没有任何参数时，表示设置 groupname 密码（/etc/gshadow）
+-A：将 groupname 的管理权交由后面的使用者管理（该用户组的管理员）。
+-M：将某些账号加入这个用户组当中。
+-r：将 groupname 的密码删除。
+-R：让 groupname 的密码栏失效。
+# 关于用户组管理（Group administrator）做的操作。
+[someone@study ~]# gpasswd [-ad] user groupname
+选项与参数：
+-a：将某位使用者加入到 groupname 这个用户组当中。
+-d：将某位使用者删除出 groupname 这个用户组当中。
+范例一：建立一个新用户组，名称为 testgroup 且用户组交由 vbird1 管理。
+[root@study ~]# groupadd testgroup <==先建立用户组。
+[root@study ~]# gpasswd testgroup <==给这个用户组一个密码。
+New Password:
+Re-enter new password:
+# 输入两次密码就对了。
+[root@study ~]# gpasswd -A vbird1 testgroup <==加入用户组管理员为 vbird1。
+[root@study ~]# grep testgroup /etc/group /etc/gshadow
+
+范例二：以 vbird1 登录系统，并且让它加入 vbird1、vbird3 成为 testgroup 成员。
+[vbird1@study ~]# id
+uid=1003（vbird1）gid=1004（vbird1）groups=1004（vbird1）...
+#看得出来，vbird1 尚未加入 testgroup 用户组。
+[vbird1@study ~]# gpasswd -a vbird1 testgroup
+[vbird1@study ~]# gpasswd -a vbird3 testgroup
+[vbird1@study ~]# grep testgroup /etc/group
+testgroup:x:1503:vbird1:vbird3
 ```
+
+
+
+
+
+
+
 
 
 
