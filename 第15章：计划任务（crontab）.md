@@ -143,3 +143,171 @@ HH:MM[am|pm] + number [minutes|hours|days|weeks]
 | `,（逗号）`  | 代表分隔时段的意思。举例来说，如果要执行的任务是 3:00 与 6:00 时，就会是：<br> 0 3,6 * * * command <br> 时间参数还是有五栏，不过第二栏是 3、6，代表 3 与 6 都适用 |
 | `-（减号）` | 代表一段时间范围内，举例来说，8 点到 12 点之间的每小时的 20 分都执行一项任务：<br> 20 8-12 * * * command <br> 仔细看到第二栏变成 8-12，代表 8、9、10、11、12 都适用的意思 |
 | `/n（斜线）` | 那个 n 代表数字，亦即是【每隔 n 单位间隔】的意思，例如每五分钟执行一次，则：<br> `*/5 * * * * command`<br> 很简单吧，用 `*` 与/5 来搭配，也可以写成 0-59/5，相同意思 |
+
+## 15.3.2 系统的配置文件：/etc/crontab、/etc/cron.d/*
+
+这个【crontab -e】是针对用户的 cron 来设计的，如果要执行【系统的例行性任务】时，该怎么办？是否还是需要用 crontab -e 来管理你的计划任务？当然不需要，你只要编辑 /etc/crontab 这个文件就可以。有一点需要特别注意，那就是 crontab -e 这个 crontab 其实是 /usr/bin/crontab 这个执行文件，但是 /etc/crontab 可是一个【纯文本文件】，你可以用 root 的身份编辑一下这个文件。
+基本上，cron **这个服务的最低检测限制是【分钟】，所以【cron 会每分钟去读取一次 /etc/crontab 与 /var/spool/cron 里面的数据内容】**。因此，只要你编辑完 /etc/crontab 这个文件，并且将它保存之后，那么 cron 的设置就自动地会来执行了。
+>在 Linux 下面的 crontab 会自动帮我们每分钟重新读取一次 /etc/crontab 的计划任务列表。但是由于某些原因是在其他的 UNIX 系统中，由于 crontab 是读到内存当中的，所以在你修改完/etc/crontab之后，可能并不会马上执行，这个时候请重新启动 crond 这个服务：【systemctl restart crond】。
+
+废话少说，我们就来看一下这个 /etc/crontab 的内容。
+```shell
+[root@study ~]# cat /etc/crontab
+# /etc/crontab: system-wide crontab                                                
+# Unlike any other crontab you don't have to run the `crontab'                     
+# command to install the new version when you edit this file                       
+# and files in /etc/cron.d. These files also have username fields,                 
+# that none of the other crontabs do.                                              
+SHELL=/bin/sh                                                                      
+# You can also override PATH, but by default, newer versions inherit it from the environment                                                                        
+#PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin                 
+# Example of job definition:                                                       
+# .---------------- minute (0 - 59)                                                
+# |  .------------- hour (0 - 23)                                                  
+# |  |  .---------- day of month (1 - 31)                                          
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...                          
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat                                                        
+# |  |  |  |  |                                                                    
+# *  *  *  *  * user-name command to be executed                                   
+17 *    * * *   root    cd / && run-parts --report /etc/cron.hourly                
+25 6    * * *   root    test -x /usr/sbin/anacron || { cd / && run-parts --report /etc/cron.daily; }                                                                 
+47 6    * * 7   root    test -x /usr/sbin/anacron || { cd / && run-parts --report /etc/cron.weekly; }                                                                
+52 6    1 * *   root    test -x /usr/sbin/anacron || { cd / && run-parts --report /etc/cron.monthly; }                                                               
+#
+```
+看到这个文件的内容你大概就了解了吧，呵呵，没错，这个文件与刚刚我们执行 crontab -e 的内容几乎一模一样，只有几个地方不太相同：
+- MAILTO=root
+	这个选项是说，当 /etc/crontab 这个文件中的例行性工作的命令发生错误时，或是该任务的执行结果有标准输出/标准错误时，会将错误信息或是屏幕显示的信息传给谁？默认当然是由系统直接发一封 email 给 root。不过，由于 root 无法在客户端中以 POP3 之类的协议收信，因此，鸟哥通常都将这个 email 改成自己的账号，好让我随时了解系统的状况。例如：`MAILTO=dmtsai@my.host.name`
+- PATH=
+	还记得我们在第 10 章的 BASH 当中一直提到的执行文件路径问题吧？没错，这里就是输入执行文件的查找路径，使用默认的路径设置就已经足够了。
+- 【分 时 日 月 周 身份 命令】7 个字段的设置
+	这个 /etc/crontab 里面可以设置的基本语法与 crontab -e 不太相同。前面同样是分、时、日、月、周 5 个字段，但是在 5 个字段后面接的并不是命令，而是一个新的字段，那就是【执行后面那串命令的用户身份】是什么，这与用户的 crontab -e 不相同。由于用户自己的 crontab 并不需要指定身份，但 /etc/crontab 里面当然要指定身份。以上表的内容来说，系统默认的计划任务是以 root 的身份来执行的。
+
+### ◆ crond 服务读取配置文件的位置
+
+一般来说，crond 默认有 3 个地方会执行脚本配置文件，它们分别是：
+- /etc/contab
+- /etc/cron.d/*
+- /var/spool/cron/*
+这三个地方中，跟系统的运行有关系的两个配置文件是 /etc/crontab 文件以及 /etc/cron.d/* 目录内的文件，另外一个是跟用户自己的任务有关系的配置文件，就是放在 /var/spool/cron/ 里面的文件。我们已经知道了 /var/spool/cron 以及 /etc/crontab 的内容，那么现在就来看看 /etc/cron.d 里面的东西。
+```shell
+[root@study ~]# ls -l /etc/cron.d
+total 16                                                                           
+-rw-r--r-- 1 root root 201 Apr  8  2024 e2scrub_all                                
+-rw------- 1 root root 110 May 15 14:23 sgagenttask                                
+-rw-r--r-- 1 root root 396 Apr 23  2024 sysstat                                    
+-rw------- 1 root root 156 May 15 14:23 yunjing
+# 其实说真的，除了 /etc/crontab 之外，crond 的配置文件还不少，上面就有四个设置。
+# 先让我们来看看 0hourly 这个配置文件的内容。
+[root@study ~]# cat /etc/cron.d/e2scrub_all
+30 3 * * 0 root test -e /run/systemd/system || SERVICE_MODE=1 /usr/lib/x86_64-linux-gnu/e2fsprogs/e2scrub_all_cron                                               
+10 3 * * * root test -e /run/systemd/system || SERVICE_MODE=1 /sbin/e2scrub_all -A -r
+# 看一看，内容跟/etc/crontab 几乎一模一样，但实际上是有设置值，就是最后一行。
+```
+如果你想要自己开发新的软件，该软件要拥有自己的 crontab 定时命令时，就可以将【分、时、日、月、周、身份、命令】的配置文件放置到 /etc/cron.d/ 目录下。在此目录下的文件是【crontab 的配置文件脚本】。
+>以鸟哥来说，现在鸟哥正在开发一些虚拟化教室的软件，该软件需要定时清除一些垃圾防火墙规则。那鸟哥就会将要执行的时间与命令设计好，然后直接将设置写入到 /etc/cron.d/newfile 即可。未来如果这个软件要升级，直接将该文件覆盖成新文件即可，比起手动去分析 /etc/crontab 要单纯得多。
+
+
+另外，请注意一下上面表格中提到的最后一行，每个整点的一分会执行【run-parts /etc/cron.hourly】这个命令，咦，那什么是 run-parts 呢？如果你去分析一下这个执行文件，会发现它就是 shell 脚本，run-parts **脚本会在大约 5 分钟内随机选一个时间来执行 /etc/cron.hourly 目录内的所有执行文件。因此，放在 /etc/cron.hourly/ 的文件，必须是能被直接执行的命令脚本，而不是分、时、日、月、周的设置值**，注意注意。
+也就是说，除了自己指定分、时、日、月、周加上命令路径的 crond 配置文件之外，你也可以直接将命令放置到（或链接到）/etc/cron.hourly/ 目录下，这样该命令就会被 crond 在每小时的第 1 分钟开始后的 5 分钟内，随机取一个时间点来执行，你无须手动去指定分、时、日、月、周。
+眼尖的朋友可能还会发现，除了可以直接将命令放到 /etc/cron.hourly/，让系统每小时定时执行之外，在 /etc/ 下面其实还有 /etc/cron.daily、/etc/cron.weekly/、/etc/cron.monthly/，这三个目录是代表每日、每周、每月各执行一次的意思吗？嘿嘿，厉害，没错，是这样。不过跟 /etc/cron.hourly/ 不太一样的是，那三个目录是由 anacron 所执行的。而 anacron 的执行方式则是放在 /etc/cron.hourly/0anacron 里面，跟前几代 anacron 是单独的服务不太一样。这部分留待下个小节再来讨论。
+最后，让我们总结一下吧：
+- 个人化的操作使用【crontab -e】：如果你是根据个人需求来建立例行计划任务，建议直接使用 crontab -e 来建立你的计划任务较佳。这样也能保障你的命令操作不会被大家看到（/etc/crontab 是大家都能读取的权限）。
+- 系统维护管理使用【vim /etc/crontab】：如果你这个例行计划任务是系统的重要任务，为了让自己管理方便，同时容易追踪，建立直接写入 /etc/crontab 较佳。
+- 自己开发软件使用【vim /etc/cron.d/newfile】：如果你是想要自己开发软件，那当然最好就是使用全新的配置文件，并且放置于 /etc/cron.d/ 目录内即可。
+- 固定每小时、每日、每周执行的特别任务：如果与系统维护有关，还是建议放置到 /etc/crontab 中来集中管理较好。如果想要偷懒或是一定要在某个周期内执行的任务，也可以放置到上面谈到的几个目录内，直接写入命令即可。
+
+## 15.3.3 一些注意事项
+
+有的时候，我们以系统的 cron 来执行计划任务的建立时，要注意一些使用方面的特性。举例来说，如果我们有四个任务都是五分钟要执行一次的，那么是否这四个操作全部都在同一个时间点执行呢？如果同时执行，该四个操作又很耗系统资源，如此一来，每五分钟的某个时刻不是会让系统忙得要死？呵呵，此时好好地分配一些运行时间就 OK。所以，还需要注意以下内容：
+
+### ◆ 资源分配不均的问题
+
+大量使用 crontab 的时候，总是会有问题发生。最严重的问题就是【系统资源分配不均】。以鸟哥的系统为例，我会检测主机流量的信息，包括：
+- 流量
+- 区域内其他 PC 的流量监测
+- CPU 使用率
+- RAM 使用率
+- 在线人数实时监测
+如果每个流程都在同一个时间启动的话，那么在某个时段，系统会变得相当繁忙。所以，这个时候就必须要分别设置，我可以这样做：
+```shell
+[root@study ~]# vim /etc/crontab
+17 *    * * *   root    cd / && run-parts --report /etc/cron.hourly                
+25 6    * * *   root    test -x /usr/sbin/anacron || { cd / && run-parts --report /etc/cron.daily; }                                                                 
+47 6    * * 7   root    test -x /usr/sbin/anacron || { cd / && run-parts --report /etc/cron.weekly; }                                                                
+52 6    1 * *   root    test -x /usr/sbin/anacron || { cd / && run-parts --report /etc/cron.monthly; }
+```
+看到了没？那个【,】分隔的时候，请注意，不要有空格符。（连续的意思）如此一来，则可以将每五分钟运行的流程分别在不同的时刻来执行，从而让系统的执行较为流畅。
+
+### ◆ 取消不要的输出选项
+
+另外一个困扰发生在【当有执行成果或是执行的选项中有输出的数据时，该数据将会 mail 给 MAILTO 设置的账号】。好，那么当有一个任务一直出错（例如 DNS 的检测系统当中，若 DNS 上层主机挂掉，那么你就会一直收到错误信息），怎么办呢》呵呵，还记得第 10 章谈到的数据流重定向吧？直接用【数据流重定向】将结果输出到 /dev/null 这个垃圾桶当中就好。
+
+### ◆ 安全的校验
+
+很多时候木马都是以计划任务命令的方式植入的，所以可以借由检查 /var/log/cron 的内容来观察是否有【非您设置的 cron 被执行了？】这个时候就需要小心一点。
+
+### ◆ 周与日月不可同时并存
+
+另一个需要注意的地方在于：【你可以分别以周或是日月为单位作为循环，但你不可使用几月几号且为星期几的模式任务】。这个意思是说，你不可以这样编写一个计划任务：
+```shell
+30 12 11 9 5 root echo "just test" <==这是错误的写法。
+```
+本来你以为 9 月 11 号且为星期五才会执行这项任务，无奈的是，系统可能会判定每个星期五做一次，或每年的 9 月 11 号分别执行，如此一来与你当初的规划就不一样了。所以，得要注意这个地方。
+>根据某些人的说法，这个月日、周不可并存的问题已经在新版中被解决了，不过，鸟哥并没有实际去验证它，目前也不打算验证它。因为，周就是周，月日就月日，单一执行点就是单一执行点，无须使用 crontab 去设置固定的日期，您说是吧？
+
+# 15.4 可唤醒停机期间的工作任务
+
+想象一个环境，你的 Linux 服务器有一个任务是需要在每周的星期天凌晨 2 点执行，但是很不巧，星期六停电了，所以你得要星期一才能进公司去启动服务器。那么请问，这个星期天的计划任务还要不要执行？因为你开机的时候已经是星期一，所以星期天的任务当然不会被执行，对吧。
+问题是，若该任务非常重要（例如例行备份），所以其实你还是希望在下个星期天之前的某天执行一下比较好，那你该怎么办？自己手动执行？如果你跟鸟哥一样是个记忆力超差的家伙，那么肯定【记不起来某个重要任务要执行】的，这时候就要靠 anacron 这个命令的功能了。这不命令可以主动帮你执行到了但却没有执行的计划任务。
+
+## 15.4.1 什么是 anacron
+
+anacron 并不是用来替换 crontab 的，anacron 存在的目的就在于我们上面提到的，用于处理非 24 小时运行的 Linux 系统所执行的 crontab，以及因为某些原因导致的超过时间而没有被执行的任务。
+其实 anacron 默认会以一天、七天、一个月为期去检测系统未执行的 crontab 任务，因此对于某些特殊的使用环境非常有帮助。举例来说，如果你的 Linux 主机是放在公司给同事使用的，因为周末假日大家都不在从而没有必要开启，所以你的 Linux 每周末都会关机凌天。但是 crontab 大多在每天的凌晨以及周日的早上执行各项任务，偏偏你又关机了，系统很多 crontab 的任务就无法执行，此时 anacron 刚好可以解决这个问题。
+那么 anacron 又是怎么知道我们的系统啥时关机的呢？这就要使用 anacron 读取的时间记录文件（timestamps）了。anacron 会去分析现在的时间与时间记录文件所加载的上次执行 anacron 的时间，两者比较后若发现有差异，那就是在某些时刻没有执行 crontab，此时 anacron 就会开始执行未执行的 crontab 任务了。
+
+## 15.4.2 anacron 与 /etc/anacrontab
+
+anacron 其实是一个程序并非一个服务，这个程序在 CentOS 当中已经进入 crontab 的任务列表，同时 anacron 会每小时被主动执行一次。咦？每小时？所以 anacron 的配置文件应该放置在 /etc/cron.hourly 吗？嘿嘿，您真内行，赶紧来看一看。
+基本上，anacron 的语法如下：
+```shell
+[root@study ~]# anacron [-sfn] [job]..
+[root@study ~]# anacron -u [job]..
+选项与参数：
+-s：开始连续地执行各项任务（job），会根据时间记录文件地数据判断是否执行。
+-f：强制执行，而不去判断时间记录文件的时间戳。
+-n：立刻执行未执行的任务，而不延迟（delay）等待时间
+-u：仅更新时间记录文件的时间戳，不执行任何任务。
+job：由 /etc/anacrontab 定义的各项任务名称。
+```
+在我们的 CentOS 中，anacron 其实每小时都会被抓出来执行一次，但是担心 anacron 误判时间参数，因此 /etc/cron.hourly/ 里面的 anacron 才会在文件名之前加个 0（0anacron），让 anacron 最先执行，就是为了让时间戳先更新，以避免 anacron 误判 crontab 尚未执行任何任务。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
