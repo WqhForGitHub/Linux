@@ -405,6 +405,86 @@ DIRSTACK=()
 ![进程相关性示意图](https://linux-1257950569.cos.ap-guangzhou.myqcloud.com/%E9%B8%9F%E5%93%A5%E7%9A%84%20Linux%20%E7%A7%81%E6%88%BF%E8%8F%9C%EF%BC%88%E5%9F%BA%E7%A1%80%E5%AD%A6%E4%B9%A0%E7%AF%87%EF%BC%89%E7%AC%AC%E5%9B%9B%E7%89%88/%E7%AC%AC10%E7%AB%A0%EF%BC%9A%E8%AE%A4%E8%AF%86%E4%B8%8E%E5%AD%A6%E4%B9%A0BASH/%E8%BF%9B%E7%A8%8B%E7%9B%B8%E5%85%B3%E6%80%A7%E7%A4%BA%E6%84%8F%E5%9B%BE.png)
 如上图所示，我们在原本的 bash 下面执行另一个 bash，结果操作的环境界面会跑到第二个 bash 去（就是子进程），那原本的 bash 就会在暂停的情况（睡着了，就是 sleep），整个命令运行的环境是实线的部分。若要回到原本的 bash 去，就只有第二个 bash 结束掉（执行 exit 或 logout）才行。更多的进程概念我们会在第四部分谈及，这里只要有这个概念即可。
 这个进程概念与变量有啥关系？关系可大了。因为**子进程仅会继承父进程的环境变量，子进程不会继承父进程的自定义变量**。所以你在原本 bash 的自定义变量在进入了子进程后就会消失不见，一直到你离开子进程并回到原本的父进程后，这个变量才会又出现。
+换个角度来想，也就是说，如果我能将自定义变量变成环境变量的话，那不就可以让该变量值继续存在于子进程了吗？呵呵，没错。此时，那个 export 命令就很有用。如你想要让该变量内容继续的在子进程中使用，那么就请执行：
+```shell
+[dmtsai@study ~]# export 变量名称
+```
+这东西用在**共享自己的变量设置给后来调用的文件或其他进程**。像鸟哥常常在自己的主文件后面调用其他附属文件（类似函数的功能），但是主文件与附属文件内都有相同的变量名称，若一再重复设置时，要修改也很麻烦，此时只要在原本的第一个文件内设置好 export 变量，后面所调用的文件就能够使用这个变量设置了。而不需要重复设置，这在 shell 脚本当中非常实用。如果仅执行 export 而没有接变量时，那么此时将会把所有的环境变量显示出来，例如：
+```shell
+[dmtsai@study ~]# export
+declare -x GOPROXY="https://mirrors.tencent.com/go,direct"                         
+declare -x HOME="/root"                                                            
+declare -x LANG="en_US.UTF-8"                                                      
+declare -x LESSCLOSE="/usr/bin/lesspipe %s %s"                                     
+declare -x LESSOPEN="| /usr/bin/lesspipe %s"                                       
+declare -x LOGNAME="root"                                                          
+declare -x LS_COLORS="rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=00:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lz
+
+h=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*
+
+.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.avif=01;35:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*
+
+.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:
+
+*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=
+
+01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:*~=00;90:*#=00;90:*.bak=00;90:*.crdownload=00;90:*.dpkg-dist=00;90:*
+
+.dpkg-new=00;90:*.dpkg-old=00;90:*.dpkg-tmp=00;90:*.old=00;90:*.orig=00;90:*.part=00;90:*.rej=00;90:*.rpmnew=00;90:*.rpmorig=00;90:*.rpmsave=00;90:*.swp=00;90:*.tmp=00;90:*.ucf-dist=00;90:*.ucf-new=00;90:*.ucf-old=00;90:"                                               
+
+declare -x MAIL="/var/mail/root"                                                   
+declare -x OLDPWD                                                                  
+declare -x PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin"      
+declare -x PROMPT_COMMAND="history -a; "                                           
+declare -x PWD="/root"                                                             
+declare -x SHELL="/bin/bash"                                                       
+declare -x SHLVL="1"                                                               
+declare -x SUDO_COMMAND="/bin/bash"                                                
+declare -x SUDO_GID="1001"                                                         
+declare -x SUDO_UID="1000"                                                         
+declare -x SUDO_USER="ubuntu"                                                      
+declare -x TERM="xterm-256color"                                                   
+declare -x USER="root"                                                             
+declare -x XDG_DATA_DIRS="/usr/local/share:/usr/share:/var/lib/snapd/desktop"
+```
+那如何将环境变量转成自定义变量？可以使用本章后续介绍的 declare。
+
+### 10.2.4 影响显示结果的语系变量（locale）
+
+还记得我们在第 4 章里面提到的语系问题吗？就是当我们使用 man command 的方式去查询某个数据的说明文件时，该说明文件的内容可能会因为我们使用的语系不同而产生乱码。另外，利用 ls 查询文件的时间时，也可能会有乱码出现在时间的部分，这个问题其实就是语系的问题。
+目前大多数的 Linux 发行版已经都是支持日渐流行的 Unicode，也都支持大部分的国家语系。那么我们的 Linux 到底支持了多少的语系？这可以由 locale 命令来查询。
+```shell
+[dmtsai@study ~]# locale -a
+C                                                                                  
+C.utf8                                                                             
+en_US.utf8                                                                         
+POSIX
+```
+繁体中文语序至少支持了两种以上的编码，一种是目前还是很常见的 Big5，另一种则是越来越热门的 UTF-8 编码。那么我们如何自定义这些编码？其实可以通过下面这些变量的话：
+```shell
+[dmtsai@study ~]# locale <==后面不加任何选项与参数即可。
+LANG=en_US.UTF-8                                                                   
+LANGUAGE=                                                                          
+LC_CTYPE="en_US.UTF-8"                                                             
+LC_NUMERIC="en_US.UTF-8"                                                           
+LC_TIME="en_US.UTF-8"                                                              
+LC_COLLATE="en_US.UTF-8"                                                           
+LC_MONETARY="en_US.UTF-8"                                                          
+LC_MESSAGES="en_US.UTF-8"                                                          
+LC_PAPER="en_US.UTF-8"                                                             
+LC_NAME="en_US.UTF-8"                                                              
+LC_ADDRESS="en_US.UTF-8"                                                           
+LC_TELEPHONE="en_US.UTF-8"                                                         
+LC_MEASUREMENT="en_US.UTF-8"                                                       
+LC_IDENTIFICATION="en_US.UTF-8"                                                    
+LC_ALL=
+```
+
+
+
+
+
+
 
 
 
