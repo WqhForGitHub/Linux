@@ -479,6 +479,7 @@ LC_MEASUREMENT="en_US.UTF-8"
 LC_IDENTIFICATION="en_US.UTF-8"                                                    
 LC_ALL=
 ```
+基本上，你可以逐一设置每个与语系有关的变量数据，但事实上，如果其他的语系变量都未设置，且**你有设置 LANG 或是 LC_ALL 时，则其他的语系变量就会被这两个变量所替换**。
 
 
 
