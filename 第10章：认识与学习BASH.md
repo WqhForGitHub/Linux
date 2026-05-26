@@ -144,33 +144,33 @@ cd is a shell builtin <==看到了吗？cd 是 shell 内置命令。
 
 变量是 bash 环境中非常重要的一个玩意儿，我们知道 Linux 是多人多任务的环境，每个人登录系统都能取得一个 bash shell，每个人都能够使用 bash 执行 mail 这个命令来接收自己的邮件等。问题是，bash 是如何得知你的邮箱是哪个文件？这就需要变量的帮助。所以，你说变量重不重要？下面我们将介绍重要的环境变量、变量的使用与设置等数据，呼呼，动脑时间又来到了。
 
-### 10.2.1 什么是变量？
+## 10.2.1 什么是变量？
 
 那么，什么是变量？简单地说，就是让某一个特定字符串代表不固定的内容。举个大家在中学都会学到的数学例子，那就是【y = ax + b】这东西，**在等号左边的（y）就是变量，在等号右边的（ax+b）就是变量内容，要注意的是，左边是未知数，右边是已知数**。讲的更简单一点，我们可以用一个简单的字眼来替换另一个比较复杂或是容易变动的数据。这有什么好处？最大的好处就是方便。
 
-#### ◆ 变量的可变性与方便性
+### ◆ 变量的可变性与方便性
 
 举例来说，我们每个账号的邮箱默认是以 MAIL 这个变量来进行存取的，当 dmtsai 这个用户登录时，它便会取得 MAIL 这个变量，而这个变量的内容其实就是 /var/spool/mail/dmtsai，那如果 vbird 登录？它取得的 MAIL 这个变量的内容其实就是 /var/spool/mail/vbird。而我们使用邮件读取命令 mail 来读取自己的邮箱时，嘿嘿，这个程序可以直接读取 MAIL 这个变量的内容，就能够自动地分辨出属于自己的邮箱。这样一来，设计程序的程序员就真的很方便。
 ![程序、变量与不同用户的关系](https://linux-1257950569.cos.ap-guangzhou.myqcloud.com/%E9%B8%9F%E5%93%A5%E7%9A%84%20Linux%20%E7%A7%81%E6%88%BF%E8%8F%9C%EF%BC%88%E5%9F%BA%E7%A1%80%E5%AD%A6%E4%B9%A0%E7%AF%87%EF%BC%89%E7%AC%AC%E5%9B%9B%E7%89%88/%E7%AC%AC10%E7%AB%A0%EF%BC%9A%E8%AE%A4%E8%AF%86%E4%B8%8E%E5%AD%A6%E4%B9%A0BASH/%E7%A8%8B%E5%BA%8F%E3%80%81%E5%8F%98%E9%87%8F%E4%B8%8E%E4%B8%8D%E5%90%8C%E7%94%A8%E6%88%B7%E7%9A%84%E5%85%B3%E7%B3%BB.png)
 如上图所示，由于系统已经帮我们规划好 MAIL 这个变量，所以用户只要知道 mail 这个命令如何使用即可，mail 会主动使用 MAIL 这个变量，就能够如上图所示取得自己的邮箱了。（注意大小写、小写的 mail 是命令，大写的 MAIL 则是变量名称。）
 那么使用变量真的比较好吗？这是当然的，想象一个例子，如果 mail 这个命令将 root 收信的邮箱（mailbox）文件名为 /var/spool/mail/root 直接写入程序代码中，那么当 dmtsai 要使用 mail 时，将会取得 /var/spool/mail/root 这个文件的内容。不合理吧，所以你就需要帮 dmtsai 也设计一个 mail 的程序，将 /var/spool/mail/dmtsai 写死到 mail 的程序代码当中。天呐，那系统要有多少个 mail 命令？反过来说，使用变量就变得的很简单了，因为你不需要修改到程序代码，只要将 MAIL 这个变量带入不同的内容即可让所有用户通过 mail 取得自己的邮件，当然简单多了。
 
-#### ◆ 影响 bash 环境操作的变量
+### ◆ 影响 bash 环境操作的变量
 
 某些特定变量会影响到 bash 的环境。举例来说，我们前面已经提到过很多次的那个 PATH 变量。你能不能在任何目录下执行某个命令，与 PATH 这个变量有很多的关系。例如你执行 ls 这个命令时，系统就是通过 PATH 这个变量里面的内容所记录的路径顺序来查找命令。如果在查找完 PATH 变量内的路径还找不到 ls 这个命令时，就会在屏幕上显示【command not found】的错误信息。
 如果说得专业一点，那么由于在 Linux 下面，所有的线程都是需要一个执行码，而就如同上面提到的，**你真正以 shell 来跟 Linux 沟通，是在正确的登录 Linux 之后**。这个时候你就有一个 bash 的执行程序，也才可以真正的经由 bash 来跟系统沟通。而在进入 shell 之前，也正如同上面提到的，由于系统需要一些变量来提供它数据的读写（或是一些环境的设置参数值，例如是否要显示彩色等），所以就有一些所谓的**环境变量**需要来读入系统中了。这些环境变量例如 PATH、HOME、MAIL、SHELL 等，都是很重要的，为了区别与自定义变量的不同，环境变量通常以大写字符来表示。
 
-#### ◆ 脚本程序设计（shell script）的好帮手
+### ◆ 脚本程序设计（shell script）的好帮手
 
 这些还都只是系统默认的变量的目的，如果是个人的设置方面的应用：例如你要写一个大型的脚本时，有些数据因为可能由于用户习惯的不同而有差异，比如说路径，由于该路径在脚本被使用在相当多的地方，如果下次换了一台主机，都要修改脚本里面的所有路径，那么我一定会疯掉。这个时候如果使用变量，而将该变量的定义写在最前面，后面相关的路径名称都以变量来替换，嘿嘿，那么你只要修改一行就等于修改了整篇脚本，方便得很，所以，良好的程序员都会善用变量的定义。
 ![变量应用于 shell 脚本的示意图|687](https://linux-1257950569.cos.ap-guangzhou.myqcloud.com/%E9%B8%9F%E5%93%A5%E7%9A%84%20Linux%20%E7%A7%81%E6%88%BF%E8%8F%9C%EF%BC%88%E5%9F%BA%E7%A1%80%E5%AD%A6%E4%B9%A0%E7%AF%87%EF%BC%89%E7%AC%AC%E5%9B%9B%E7%89%88/%E7%AC%AC10%E7%AB%A0%EF%BC%9A%E8%AE%A4%E8%AF%86%E4%B8%8E%E5%AD%A6%E4%B9%A0BASH/%E5%8F%98%E9%87%8F%E5%BA%94%E7%94%A8%E4%BA%8E%20shell%20%E8%84%9A%E6%9C%AC%E7%9A%84%E7%A4%BA%E6%84%8F%E5%9B%BE.png)
 最后我们就简单的对**变量** 做个简单定义：变量就是以一组文字或符号等，来替换一些设置或一串保留的数据，例如：我设置了【myname】就是【VBird】，所以当你读取 myname 这个变量时，系统自然就会知道，那就是 Vbird，那么如何**显示变量**？这就需要使用到 echo 这个命令。
 
-### 10.2.2 变量的使用与设置：echo、变量设置规则、unset
+## 10.2.2 变量的使用与设置：echo、变量设置规则、unset
 
 说得口沫横飞的，也不知道变量与变量代表的内容有啥关系？那我们就将变量的内容拿出来给您看看。你可以利用 echo 这个命令来使用变量，但是，变量在被使用时，前面必须要加上美元符号（$）才行，举例来说，要知道 PATH 的内容，该如何是好？
 
-#### ◆ 变量的使用：echo
+### ◆ 变量的使用：echo
 ```shell
 [dmtsai@study ~]# echo $variable
 [dmtsai@study ~]# echo $PATH
@@ -190,7 +190,7 @@ VBird <==出现了，因为这个变量已经被设置了。
 >请各位读者注意，每一种 shell 的语法都不相同，在变量的使用上，bash 在你没有设置的变量中强制去 echo 时，它会显示出空的值。在其他某些 shell 中，随便去 echo 一个不存在的变量，它是会出现错误信息的，要注意。
 
 
-#### ◆ 变量的设置规则
+### ◆ 变量的设置规则
 - 变量与变量内容以一个等号【=】来连接，如下所示：
 	myname-VBird
 - 等号两边不能直接接空格，如下所示为错误：
@@ -198,9 +198,9 @@ VBird <==出现了，因为这个变量已经被设置了。
 - 变量名称只能是英文字母与数字，但是**开头字符不能是数字**，如下为错误：
 	2myname=VBird
 - 变量内容若有空格可使用双引号【"】或单引号【'】将变量内容结合起来，但：
-#### ◆ 双引号内的特殊字符如 $ 等，可以保有原本的特性，如下所示：
+### ◆ 双引号内的特殊字符如 $ 等，可以保有原本的特性，如下所示：
 	var="lang is $LANG"则 echo $var 可得 lang is zh_CN.UFT-8
-#### ◆ 单引号内的特殊字符则仅为一般字符（纯文本）。如下所示：
+### ◆ 单引号内的特殊字符则仅为一般字符（纯文本）。如下所示：
 	var='lang is $LANG'则 echo $var 可得 lang is $LANG
 - 可用**转义符【/】** 将特殊符号（如 [Enter]、$、\、空格、' 等）变成一般字符，如：
 	myname=VBird\ Tsai
@@ -272,11 +272,11 @@ VBird <==看吧，出现设置值了。
 ```
 根据上面的案例你可以试试看，就可以了解变量的设置，这个是很重要的呦，请勤加练习。其中，较为重要的一些特殊符号的使用，例如单引号、双引号、转义符、美元符号、反单引号等，在下面的例题中想一想吧。
 
-### 10.2.3 环境变量的功能
+## 10.2.3 环境变量的功能
 
 环境变量可以帮我们实现很多功能，包括根目录（主文件夹）的变换、提示字符的显示、执行文件查找的路径等，还有很多很多。那么，既然环境变量有那么多的功能，问一下，目前我的 shell 环境中，有多少默认的环境变量？我们可以利用两个命令来查看，分别是 env 与 export。
 
-#### ◆ 用 env 观察环境变量与常见环境变量说明
+### ◆ 用 env 观察环境变量与常见环境变量说明
 ```shell
 范例一：列出目前的 shell 环境下的所有环境变量与其内容。
 [dmtsai@study ~]# env
@@ -329,7 +329,7 @@ env 是 environment（环境）的简写，上面的例子当中，是列出来�
 ```
 大致上是有这些环境变量，里面有些比较重要的参数，在下面我们都会另外进行一些说明。
 
-#### ◆ 用 set 观察所有变量（含环境变量与自定义变量）
+### ◆ 用 set 观察所有变量（含环境变量与自定义变量）
 
 bash 可不只有环境变量，还有一些与 bash 操作界面有关的变量，以及用户自己定义的变量存在。那么这些变量如何观察？这个时候就得要使用 set 这个命令。set 除了环境变量之外，还会将其他在 bash 内的变量通通显示出来，信息很多，下面鸟哥仅列出几个重要的内容：
 ```shell
@@ -449,7 +449,7 @@ declare -x XDG_DATA_DIRS="/usr/local/share:/usr/share:/var/lib/snapd/desktop"
 ```
 那如何将环境变量转成自定义变量？可以使用本章后续介绍的 declare。
 
-### 10.2.4 影响显示结果的语系变量（locale）
+## 10.2.4 影响显示结果的语系变量（locale）
 
 还记得我们在第 4 章里面提到的语系问题吗？就是当我们使用 man command 的方式去查询某个数据的说明文件时，该说明文件的内容可能会因为我们使用的语系不同而产生乱码。另外，利用 ls 查询文件的时间时，也可能会有乱码出现在时间的部分，这个问题其实就是语系的问题。
 目前大多数的 Linux 发行版已经都是支持日渐流行的 Unicode，也都支持大部分的国家语系。那么我们的 Linux 到底支持了多少的语系？这可以由 locale 命令来查询。
@@ -491,7 +491,7 @@ LANG=en_US.UTF-8
 因为鸟哥在第 3 章的安装时选择的是中文语系安装界面，所以这个文件默认就会使用中文编码，你也可以自行将它改成你想要的语系编码即可。
 >假设你有一个纯文本文件原本是在 Windows 下面建立的，那么这个文件默认可能是 GBK 的编码格式。在你将这个文件上传到 Linux 主机后，在 X Window 下面打开时，咦，怎么中文字通通变成了乱码？别担心。因为如上所示，Linux 目前大多默认是 Unicode 显示，你只要将开启该文件的软件编码由 UTF-8 改成 GBK 就能够看到正确的中文了。
 
-### 10.2.5 变量的有效范围
+## 10.2.5 变量的有效范围
 
 什么？变量也有使用的范围？没错，我们在上面的 export 命令说明中，就提到了这个概念。如果在运行程序的时候，有父进程与子进程的不同进程关系时，则变量可否被引用与 export 有关，被 export 后的变量，我们可以称它为环境变量，环境变量可以被子进程所引用，但是其他的自定义变量内容就不会存在于子进程中。
 >在某些不同的书籍会谈到【全局变量，global variable】与【局部变量，local variable】，在鸟哥的这个章节中，基本上你可以这样看待：
@@ -504,11 +504,11 @@ LANG=en_US.UTF-8
 - 当加载另一个 shell 时（即启动子进程，而离开原本的父进程），子 shell 可以将父 shell 的环境变量所在的内存区域导入自己的环境变量区块当中。
 通过这样的关系，我们就可以让某些变量在相关的进程之间存在，以帮助自己更方便地操作环境。不过要提醒的是，这个【环境变量】与【bash 的操作环境】意思不太一样，举例来说，PS1 并不是环境变量，但是这个 PS1 会影响到 bash 的界面（提示字符嘛），所以这些变量的相关性要梳理清楚。
 
-### 10.2.6 变量键盘读取、数组与声明：read、array、declare
+## 10.2.6 变量键盘读取、数组与声明：read、array、declare
 
 我们上面提到的变量设置功能，都是由命令行直接设置的，那么，可不可以让用户能够经由键盘输入？什么意思？是否记得某些程序执行的过程当中，会等待用户输入 "yes/no" 之类的信息？在 bash 里面也有相对应的功能。此外，我们还可以定义这个变量的属性，例如数组或是数字等，下面就来看看吧。
 
-#### ◆ read
+### ◆ read
 
 要读取来自键盘输入的变量，就是用 read 这个命令。这个命令最常被用在 shell 脚本的编写当中，想要跟用户交互？用这个命令就对了，关于脚本的写法，我们会在第 13 章介绍，下面先来看一看 read 的相关语法吧。
 ```shell
@@ -516,322 +516,173 @@ LANG=en_US.UTF-8
 选项与参数：
 -p：后面可以接提示字符。
 -t：后面可以接等待的【秒数】，这个比较有趣，不会一直等待使用者。
+范例一：让使用者由键盘输入一内容，将该内容变成名为 atest 的变量
+[dmtsai@study ~]# read atest
+This is a test <==此时光标会等待你的输入，请输入左侧文字看看。
+[dmtsai@study ~]# echo ${atest}
+This is a test <==你刚刚输入的数据已经变成一个变量内容。
+范例二：提示使用者 30 秒内输入自己的大名，将该输入字符作为名为 named 的变量内容。
+[dmtsai@study ~]# read -p "Please keyin your name: " -t 30 named
+Please keyin your name: VBird Tsai <==注意看，会有提示字符。
+[dmtsai@study ~]# echo ${named}
+VBird Tsai <==输入的数据又变成一个变量的内容了。
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 10.2 Shell 的变量功能
-​                                                               
-
-## 2. 变量的使用与设置：echo、变量设置规则、unset
-
-### 变量的使用：echo 
-
-```powershell
-[root@study ~]$ echo $variable
-[root@study ~]$ echo $PATH
-[root@study ~]$ echo ${PATH}
+read 之后不加任何参数，直接加上变量名称，那么下面就会主动出现一个空白行等待你的输入（如范例一）。如果加上 -t 后面接秒数，例如上面的范例二，那么 30 秒之内没有任何操作时，该命令就会自动略过了，如果是加上 -p，嘿嘿，在输入的光标前就会有比较多的提示字符给我们参考，在命令的执行里面，比较美观。
+
+### ◆ declare，typeset
+
+declare 或 typeset 是一样的功能，就是声明**声明变量的类型**。如果使用 declare 后面并没有接任何参数，那么 bash 就会主动的将所有的变量名称与内容通通显示出来，就好像使用 set 一样。那么 declare 还有什么语法呢？看看先：
+```shell
+[dmtsai@study ~]# declare [-aixr] variable
+选项与参数：
+-a：将后面名为 variable 的变量定义成为数组（array）类型。
+-i：将后面名为 variable 的变量定义成为整数（integer）类型。
+-x：用法与 export 一样，就是将后面的 variable 变成环境变量。
+-r：将变量设置成为 readonly 类型，该变量不可被更改的内容，也不能 unset。
+范例一：让变量 sum 进行 100+300+50 的求和结果。
+[dmtsai@study ~]# sum=100+300+50
+[dmtsai@study ~]# echo ${sum}
+100+300+50 <==咦，怎么没有帮我计算求和呢？因为这是文字形式的变量属性。
+[dmtsai@study ~]# declare -i sum=100+300+50
+[dmtsai@study ~]# echo ${sum}
+450
 ```
-
-
-
-### 变量的设置规则
-
-
-
-* **`变量与变量内容以一个等号 = 来连接，如下所示：`** 
-
-  myname=VBird
-
-* **`等号两边不能直接接空格，如下所示为错误：`**
-
-  myname = VBird 或 myname=VBird Tsai
-
-* **`变量名称只能是英文字母与数字，但是开头字符不能是数字，如下为错误：`** 
-
-  2myname=VBird
-
-* **`变量内容若有空格可使用双引号（""）或单引号（''）将变量内容结合起来`** 
-
-  var="lang is $LANG" 则 echo $var 可得 lang is zh_CN.UTF-8
-
-* **`单引号内的特殊字符则仅为一般字符（纯文本），如下所示：`** 
-
-  var='lang is $LANG' 则 echo $var 可得 lang is $LANG
-
-* **`可用转义符（\）将特殊符号（如 Enter、$、\、空格、' 等）变成一般字符，如：`** 
-
-  myname=VBird\ Tsai
-
-* **`在一串命令的执行中，还需要借由其他额外的命令所提供的信息时，可以使用反单引号（``）或 $（命令）。`** 
-
-  version=$(uname -r) 再 echo $version 可得 3.10.0-229.el7.x86-64
-
-* **`若该变量为扩增变量内容时，则可用 "$变量名称" 或 ${变量} 累加内容，如下所示：`** 
-
-  PATH="$PATH":/home/bin 或 PATH=${PATH}:/home/bin
-
-* **`若该变量需要在其他子程序执行，则需要以 export 来使变量变成环境变量`** 
-
-​	export PATH
-
-* **`通常大写字符为系统默认变量，自行设置变量可以使用小写字符，方便判断。`** 
-* **`取消变量的方法为使用 unset 变量名称，例如取消 myname 的设置：`** 
-
-​	unset myname
-
-**`举个例子：`** 
-
-```powershell
-[root@study ~]# 12name=VBird
--bash: 12name=VBird: command not found
-
-[root@study ~]# name = VBird
--bash: name: command not found 有空格
-
-[root@study ~]# name=VBird
-
-取消刚刚设置的 name 这个变量内容
-[root@study ~]# unset name
+由于在默认的情况下面，bash 对于变量有几个基本的定义：
+- 变量类型默认为字符串，所以若不指定变量类型，则 1+2 为一个字符串而不是计算式。所以上述第一个执行的结果才会出现那种情况
+- bash 环境中的数值运算，默认最多仅能到达整数形态，所以 1/3 结果是 0
+现在你晓得为啥你需要进行变量声明了吧？如果需要非字符串类型的变量，那就得要进行变量得声明才行。下面继续来玩些其他的 declare 功能。
+```shell
+范例二：将 sum 变成环境变量
+[dmtsai@study ~]# declare -x sum
+[dmtsai@study ~]# export | grep sum
+declare -ix sum="450" <==果然出现了，包括有 i 与 x 的定义。
+范例三：让 sum 变成只读属性，不可修改。
+[dmtsai@study ~]# declare -r sum
+[dmtsai@study ~]# sum=tesgting
+~bash：sum：readonly variable <==老天爷，不能改这个变量了。
+范例四：让 sum 变成非环境变量的自定义变量吧
+[dmtsai@study ~]# declare +x sum <== 将 - 变成 + 可以进行【取消】操作。
+[dmtsai@study ~]# declare -p sum <== -p 可以单独列出变量的类型。
+declare -ir sum="450" <==看吧，只剩下 i、r 的类型，不具有 x。
 ```
+declare 也是个很有用的功能，尤其是当我们需要使用到下面的数组功能时，它也可以帮我们声明数组的属性。不过，老话一句，数组在 shell 脚本也比较常用的。比较有趣的是，如果你不小心将变量设置为【只读】，通常要注销再登录才能恢复该变量的类型。
 
+### ◆ 数组（array）变量类型
 
-
-## 3. 环境变量的功能
-
-
-
-### 用 env 观察环境变量与常见环境变量说明
-
-```   powershell
-列出目前的 shell 环境下的所有环境变量与其内容
-[root@study ~]# env
+某些时候，我们必须使用数组来声明一些变量，这有什么好处？在一般人的使用上，是看不出来有什么好处的。不过，如果您曾经写过程序的话，那才会比较了解数组的意义，数组对写数值程序的程序员来说，可是不能错过的重点之一。好，不多说了，那么要如何设置数组的变量与内容呢？在 bash 里面，数组的设置方式是：
+```shell
+var[index]=content
 ```
-
-
-
-### 用 set 观察所有变量（含环境变量与自定义变量）
-
-```powershell
-[root@study ~]# set
+意思是说，我有一个数组名为 var，而这个数组的内容为 var[1]=小明，var[2]=大名，var[3]=好明等，那个 index 就是一些数字，重点是用中括号（[]）来设置。目前我们 bash 提供的是一维数组。老实说，如果您不必写一些复杂的程序，那么这个数组的地方，可以先略过，等到有需要再来学习即可。因为要制作出数组，通常与循环或其他判断式交互使用才有比较大的存在意义。
+```shell
+范例：设置上面提到的 var[1]，var[3] 的变量。
+[dmtsai@study ~]# var[1]="small min"
+[dmtsai@study ~]# var[2]="big min"
+[dmtsai@study ~]# var[3]="nice min"
+[dmtsai@study ~]# echo "${var[1]}, ${var[2]}, ${var[3]}"
 ```
+数组的变量类型比较有趣的地方在于【读取】，一般来说，**建议直接以${数组}的方式来读取**，比较正确无误，这也是为啥鸟哥一开始就建议你使用 ${变量} 来记忆的原因。
 
+## 10.2.7 与文件及程序的限制关系：ulimit
 
-
-### export：自定义变量转成环境变量
-
-```powershell
-[root@study ~]# export 变量名称
+想象一个状况：我的 Linux 主机里面同时登录了十个人，这十个人不知怎么搞的，同时开启了 100 个文件，每个文件的大小约 10MB，请问一下，我的 Linux 主机内存要有多大才够？`10*100*10=10000 MB = 10GB`，老天爷，这样，操作系统不挂才有鬼。为了要预防这个情况的发生，所以**我们的 bash 是可以限制用户的某些系统资源的，包括可以开启的文件数量，可以使用的 CPU 时间，可以使用的内存总量等**，如何设置呢？用 ulimit 吧。
+```shell
+[dmtsai@study ~]# ulimit [-SHacdfltu] [配额]
+选项与参数：
+-H：hard limit，严格的设置，必定不能超过这个设置的数值。
+-S：soft limit，警告的设置，可以超过这个设置值，但是若超过则有警告信息。
+	在设置上，通常 soft 会比 hard 小，举例来说，soft 可设置为 80 而 hard 设置为 100，
+	那么你可以使用到 90（因为没有超过 100），但介于 80~100 之间时，系统会有警告信息通知你。
+-a：后面不接任何选项与参数，可列出所有的限制额度。
+-c：当某些程序发生错误时，系统可能会将该程序在内存中的信息写成文件（除错用），
+	这种文件就被称为内核文件（core_file）。此为限制每个内核文件的最大容量。
+-f：此 shell 可以建立的最大文件容量（一般可能设置为 2GB）单位为 Kbytes。
+-d：程序可使用的最大段内存（segment）容量。
+-l：可用于锁定（lock）的内存量。
+-t：可使用的最大 CPU 时间（单位为秒）。
+-u：单一使用者可以使用的最大进程（process）数量。
+范例一：列出你目前身份（假设为一般账号）的所有限制数据数值
+[dmtsai@study ~]# ulimit -a
+real-time non-blocking time  (microseconds, -R) unlimited                          
+core file size              (blocks, -c) 0                                         
+data seg size               (kbytes, -d) unlimited                                 
+scheduling priority                 (-e) 0                                         
+file size                   (blocks, -f) unlimited                                 
+pending signals                     (-i) 14320                                     
+max locked memory           (kbytes, -l) 468468                                    
+max memory size             (kbytes, -m) unlimited                                 
+open files                          (-n) 1024                                      
+pipe size                (512 bytes, -p) 8                                         
+POSIX message queues         (bytes, -q) 819200                                    
+real-time priority                  (-r) 0                                         
+stack size                  (kbytes, -s) 8192                                      
+cpu time                   (seconds, -t) unlimited                                 
+max user processes                  (-u) 14320                                     
+virtual memory              (kbytes, -v) unlimited                                 
+file locks                          (-x) unlimited
+范例二：限制使用者仅能建立 10MBytes 以下的容量文件
+[dmtsai@study ~]# ulimit -f 10240
+[dmtsai@study ~]# ulimit -a | grep 'file size'
+core file size              (blocks, -c) 0                                         
+file size                   (blocks, -f) 10240 <==最大量为 10240Kbytes，相当 10Mbytes。
 ```
+还记得我们在第 7 章 Linux 磁盘文件系统里面提到过，单一文件系统能够支持的单一文件大小与 block 的大小有关，但是文件系统的限制容量都允许的太大了。如果想要让用户建立的文件不要太大时，我们是可以考虑用 ulimit 来限制用户可以建立的文件大小，使用 ulimit -f 就可以来设置。例如上面的范例二，要注意单位是 KBytes。若改天你一直无法建立一个大容量的文件，记得看一看 ulimit 的信息。
+>想要恢复 ulimit 的设置最简单的方法就是注销再登录，否则就是得要重新设置以 ulimit 设置才行。不过，要注意的是，一般身份用户如果以 ulimit 设置了 -f 的文件大小，那么它【只能继续减小文件容量，不能增加文件容量】。另外，若想要管控用户的 ulimit 限值，可以参考第 13 章的 pam 的介绍。
 
+## 10.2.8 变量内容的删除、取代与替换（可选）
 
+变量除了可以直接设置来修改原本的内容之外，有没有办法通过简单的操作来将变量的内容进行微调？举例来说，进行变量内容的删除、替换，是可以的，我们可以通过几个简单的小步骤来进行变量内容的微调。下面就来试试看。
 
+### ◆ 变量内容的删除与替换
 
-
-## 4. 影响显示结果的语系变量（locale）
-
-**`整体系统默认的语系定义在 /etc/locale.conf`** 
-
-
-
-
-
-## 5. 变量的有效范围
-
-**`环境变量 = 全局变量`** 
-
-**`自定义变量 = 局部变量`**                                                                                                                                                                                                                                                           
-
-
-
-
+变量的内容可以很简单的通过几个东西来进行删除，我们使用 PATH 这个变量的内容来做测试，请你依序进行下面的几个例子来玩玩，比较容易感受得到鸟哥在这里想要表达的意义：
+```shell
+范例一：先让小写的 path 自定义变量设置的与 PATH 内容相同。
+[dmtsai@study ~]# path=${PATH}
+[dmtsai@study ~]# echo ${path}
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+范例二：假设我不喜欢 local/bin，所以要将前 1 个目录删除掉，如何显示？
+[dmtsai@study ~]# echo ${path#/*local/bin:}
+/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+```
 
 # 10.3 命令别名与历史命令
 
+我们知道在早期的 DOS 年代，清除屏幕上的信息可以使用 cls，但是在 Linux 里面，我们则是使用 clear 来清除画面。那么可否让 cls 等于 clear？可以，用啥方法？链接文件还是什么的？别急。下面我们介绍不用链接文件的方式来完成命令别名的设置。那么什么又是历史命令？曾经做过的操作我们可以将它记录下来。那就是历史命令，下面分别来谈一谈这两条命令。
 
+## 10.3.1 命令别名设置：alias、unalias
 
-## 1. 命令别名设置：alias、unalias
-
-```powershell
-[root@study ~]# alias lm='ls -al | more'
+命令别名是一个很有趣的东西，特别是你的常用命令特别长的时候。还有，增设默认的选项在一些常用的命令上面，可以预防一些不小心误杀文件的情况发生的时候。举个例子来说，如果你要查询隐藏文件，并且需要长的列出与一页一页翻看，那么需要执行【ls -al | more】这个命令，鸟哥是觉得很烦，要输入好几个单词。那可不可以使用 lm 来简化？当然可以，你可以在命令行下面执行：
+```shell
+[dmtsai@study ~]# alias lm='ls -al | more'
 ```
-
-
-
-**`如何知道目前有哪些的命令别名？就使用 alias`** 
-
-```powershell
-[root@study ~]# alias
+立刻多出了一个可以执行的命令。这个命令名称为 lm，且其实它是执行 ls -al | more 这串命令，真是方便。不过，要注意的是：【alias 的定义规则与变量定义规则几乎相同】，所以你只要在 alias 后面加上你的{【别名】='命令与选项...'}，以后你只要输入 lm 就相当于输入了 ls -al | more 这一串命令，很方便吧。
+另外，命令别名的设置还可以替换既有的命令。举例来说，我们知道 root 可以删除（rm）任何数据，所以当你以 root 的身份在进行工作时，需要特别小心，但是总有失手的时候，那么 rm 提供了一个选项来让我们确认是否要删除该文件，那就是 -i 这个选项。所以，你可以这样做：
+```shell
+[dmtsai@study ~]# alias rm='rm -i'
 ```
-
-
-
-**`删除别名，使用 unalias`**
-
-```powershell
-[root@study ~]# unalias lm
+那么以后使用 rm 的时候，就不用太担心会有错误删除的情况了，这也是命令别名的优点。那么如何知道目前有哪些的命令别名呢？就使用 alias 呀。
+```shell
+[dmtsai@study ~]# alias
+alias egrep='egrep --color=auto'                                                   
+alias fgrep='fgrep --color=auto'                                                   
+alias grep='grep --color=auto'                                                     
+alias l='ls -CF'                                                                   
+alias la='ls -A'                                                                   
+alias ll='ls -alF'                                                                 
+alias ls='ls --color=auto'
 ```
-
-
-
-
-
-## 2. 历史命令：history
-
-```powershell
-[root@study ~]# history [n]
-[root@study ~]# history [-c]
-[root@study ~]# history [-raw] histfiles
-选项与参数：
-n：数字，意思是要列出最近的 n 条命令行表的意思
--c：将目前的 shell 中的所有 history 内容全部清除
--a：将目前新增的 history 命令新增入 histfiles 中，若没有加 histfiles，则默认写入 ~/.bash_history
--r：将 histfiles 的内容读到目前这个 shell 的 history 记录中
--w：将目前的 history 记录内容写入 histfiles 中
+由上面的列表当中，你也会发现一件事情，我们会在第 9 章的 vim 程序编辑器里面提到 vi 与 vim 是不太样的，vim 可以完成语法校验并显示颜色。一般用户会有 vi=vim 的命令别名，但是 root 则是单纯使用 vi 而已。如果你想要使用 vi 就直接以 vim 来打开文件的话，使用【alias vi='vim'】这个设置即可。至于如果要取消命令别名一的话，那么就使用 unalias。例如要将刚刚的 lm 命令别名删除，就使用：
+```shell
+[dmtsai@study ~]# unalias lm
 ```
+**那么命令别名与变量有什么不同？** 命令别名是新创一个新的命令，你可以直接执行该命令，至于变量则需要使用类似【echo】命令才能够调用出变量的内容，这两者当然不一样。很多初学者在这里老是搞不清楚，要注意。
 
 
 
-```powershell
-[root@study ~]# !number
-[root@study ~]# !command
-[root@study ~]# !!
-选项与参数：
-number：执行第几条命令的意思
-command：由最近的命令向前查找，命令串开头为 command 的那个命令，并执行
-!!：就是执行上一个命令（相当于按上键后，按回车）
 
 
 
-[root@study ~]# !66（执行第 66 条命令）
-[root@study ~]# !! 执行上一条命令
-[root@study ~]# !al 执行最近以 al 为开头的命令
-```
 
 
 
@@ -839,271 +690,138 @@ command：由最近的命令向前查找，命令串开头为 command 的那个�
 
 
 
-# 10.4 Bash shell 的操作环境
 
 
 
-## 1. 路径与命令查找顺序
 
-1. **`以相对/绝对路径执行命令，例如 /bin/ls 或 ./ls`** 
-2. **`由 alias 找到该命令来执行`** 
-3. **`由 bash 内置的命令来执行`** 
-4. **`通过 $PATH 这个变量的顺序查找到的第一个命令来执行`** 
 
 
 
 
 
-## 2. bash 的登录与欢迎信息：/etc/issue、/etc/motd
 
-```powershell
-[root@study ~]# cat /etc/issue
-\S
-Kernel \r on an \m
-```
 
 
 
-**`你想要让用户登录后取得一些信息，例如你想要让大家都知道的信息，那么可以将信息加入 /etc/motd 里面`**
 
 
 
 
 
-# 10.5 数据流重定向
 
 
 
-## 1. 什么是数据流重定向
 
 
 
-### standard output 与 standard error output
 
-* **`标准输入（stdin）：代码为 0，使用 < 或 <<`** 
-* **`标准输出（stdout）：代码为 1，使用 > 或 >>`** 
-* **`标准错误输出（stderr）：代码为 2，使用 2> 或 2>>`** 
 
-```powershell
-观察你的系统根目录（/）下各目录的文件名、权限与属性，并记录下来
-[root@study ~]# ll /
-[root@study ~]# ll / > ~/rootfile
-[root@study ~]# ll ~/rootfile
-```
 
-该文件的建立方式是：
 
-* **`该文件（本例中是 ~/rootfile）若不存在，系统会自动地将它建立起来`** 
-* **`当这个文件存在的时候，那么系统就会先将这个文件内容清空，然后再将数据写入`** 
-* **`也就是若以 > 输出到一个已存在的文件中，这个文件就会被覆盖掉`** 
 
-如果我想要将数据累加而不想要将旧的数据删除，如何做？利用两个大于的符号（>>）就好。
 
-```powershell
-[root@study ~]# ll / >> ~/rootfile
-```
 
-该文件的建立方式是：
 
-* **`~/rootfile 不存在时系统会主动建立这个文件`** 
-* **`若该文件已存在，则数据会在该文件的最下方累加进去`** 
 
 
 
-上面谈到的是标准输出的正确数据，那如果是标准错误的错误数据？那就通过 2> 及 2>>，同样的覆盖（2>）与累加（2>>）的特性。我们刚刚才谈到 stdout 代码是 1，而 stderr 代码是 2，所以这个 2> 是很容易理解的，而如果仅存在 > 时，则代表默认的代码是 1，也就是说：
 
-* **`1>：以覆盖的方法将正确的数据输出到指定的文件或设备上`** 
-* **`1>>：以累加的方法将正确的数据输出到指定的文件或设备上`** 
-* **`2>：以覆盖的方法将错误的数据输出到指定的文件或设备上`** 
-* **`2>>：以累加的方法将错误的数据输出到指定的文件或设备上`** 
 
 
 
-**`如果想要将正确的与错误的数据分别存入不同的文件中需要怎么做？`** 
 
-```                                 powershell
-将 stdout 与 stderr 分别存到不同的文件中
-[root@study ~]# find /home -name .bashrc > list_right 2> list_error
-```
 
 
 
-### /dev/null 垃圾桶黑洞设备与特殊写法
 
-```powershell
-将错误的数据丢弃，屏幕上显示正确的数据
-[root@study ~]# find /home -name .bashrc 2> /dev/null
-```
 
 
 
-**`如果我们需要将正确与错误数据通通写入同一个文件中，这个时候就得要使用特殊的写法了。我们同样用下面的案例来说明：`** 
 
-```powershell
-将命令的数据全部写入名为 list 的文件中
-[root@study ~]# find /home -name .bashrc &> list
-```
 
 
 
-### standard input：< 与 <<
 
-```                                                                                                                                                                                           powershell
-[root@study ~]# cat > catfile
-testing
-cat file test
-这里按下 Ctrl + d 来退出
 
 
-[root@study ~]# cat catfile
-testing
-cat file test
-```
 
 
 
-**`用某个文件的内容来替换键盘的敲击`**
 
-```powershell
-[root@study ~]# cat > catfile < ~/.bashrc
-[root@study ~]# ll catfile ~/.bashrc
-```
 
 
 
-**`<< 它代表的是结束的输入字符，我要用 cat 直接将输入的信息输出到 catfile 中，且当由键盘输入 eof 时，该次输入就结束`**
 
-```powershell
-[root@study ~]# cat > catfile << "eof"
-> This si a test.
-> OK now stop
-> eof 输入这关键词，立刻就结束而不需要输入 Ctrl + d
 
-[root@study ~]# cat catfile
-This si a test.
-OK now stop
-```
 
 
 
-## 2. 命令执行的判断根据：;、&&、||
 
 
 
-### cmd;cmd（不考虑命令相关性的连续命令执行）
 
-```powershell
-[root@study ~]# sync;sync; shutdown -h now
-```
 
 
 
 
 
-# 10.6 管道命令（pipe）
 
-**`| 命令`**
 
-```powershell
-[root@study ~]# ls -al /etc | less
-```
 
 
 
-**`管道命令有两个比较需要注意的地方：`**
 
-* **`管道命令仅会处理标准输出，对于标准错误会予以忽略`** 
-* **`管道命令必须要能够接受来自前一个命令的数据成为标准输入继续处理才行`** 
 
 
 
-## 1. 选取命令：cut、grep
 
 
 
-### cut
 
-**`这个命令可以将一段信息的某一段给它切出来，处理的信息是以行为单位`**
 
-```powershell
-[root@study ~]# cut -d '分隔字符' -f fields 用于有特定分隔字符
-[root@study ~]# cut -c 字符区间 用于排列整齐的信息
-选项与参数：
--d：后面接分隔字符，与 -f 一起使用
--f：根据 -d 的分隔字符将一段信息划分为数段，用 -f 取出第几段的意思
--c：以字符（characters）的单位取出固定字符区间
 
 
-将 PATH 变量取出，我要找出第五个路径
-[root@study ~]# echo ${PATH}
-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin
 
-[root@study ~]# echo ${PATH} | cut -d ':' -f 5
-/root/bin
 
-将 PATH 变量取出，我要找出第三与第五个路径
-[root@study ~]# echo ${PATH} | cut -d ':' -f 3,5
-/usr/sbin:/root/bin
 
 
-将 export 输出的信息，取得第 12 到 20 字符 
-[root@study ~]# export | cut -c 12-20
-HISTCONTR
-HISTSIZE=
-HOME="/ro
-HOSTNAME=
-LANG="en_
-LESSOPEN=
-LOGNAME="
-LS_COLORS
-MAIL="/va
-OLDPWD
-PATH="/us
-PWD="/roo
-SHELL="/b
-SHLVL="1"
-SSH_CLIEN
-SSH_CONNE
-SSH_TTY="
-TERM="xte
-USER="roo
-XDG_RUNTI
-XDG_SESSI
-```
 
 
 
-### grep
 
-```powershell
-[root@study ~]# grep [-acinv] [--color=auto] '查找字符' filename
-选项与参数：
--a：将二进制文件以文本文件的方式查找数据
--c：计算找到 '查找字符' 的次数
--i：忽略大小写的不同，所以大小写视为相同
--n：顺便输出行号
--v：反向选择，亦即显示出没有 '查找字符' 内容的那一行
---color=auto：可以将找到的关键字部分加上颜色的显示
 
 
-将 last 当中，有出现 root 的那一行就显示出来
-[root@study ~]# last | grep 'root'
 
 
 
-将 last 当中，没有 root 的那一行就显示出来
-[root@study ~]# last | grep -v 'root'
 
 
 
-在 last 的输出信息中，只要有 root 就取出，并且仅取第一栏
-[root@study ~]# last | grep 'root' | cut -d ' ' -f 1
 
 
 
-取出 /etc/man_db.conf 内含 MANPATH 的那几行
-[root@study ~]# grep --color=auto 'MANPATH' /etc/man_db.conf
-```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
