@@ -678,6 +678,338 @@ alias ls='ls --color=auto'
 ```
 **那么命令别名与变量有什么不同？** 命令别名是新创一个新的命令，你可以直接执行该命令，至于变量则需要使用类似【echo】命令才能够调用出变量的内容，这两者当然不一样。很多初学者在这里老是搞不清楚，要注意。
 
+## 10.3.2 历史命令：history
+
+前面我们提过 bash 有提供命令历史的服务，那么如何查询我们曾经执行过的命令呢？就使用 history，当然，如果觉得 history 要输入的字符太多太麻烦，可以使用命令别名来设置，不要跟我说还不会设置呦。
+```shell
+[dmtsai@study ~]# alias h='history'
+```
+如此则输入 h 等于输入 history，好了，我们来谈一谈 history 的用法吧。
+```shell
+[dmtsai@study ~]# history [n]
+[dmtsai@study ~]# history [-c]
+[dmtsai@study ~]# history [-raw] histfiles
+选项与参数：
+n：数字，意思是【要列出最近的 n 条命令行表】的意思。
+-c：将目前的 shell 中的所有 history 内容全部清除。
+-a：将目前新增的 history 命令新增入 histfiles 中，若没有加 histfiles，则默认写入 ~/.bash_history。
+-r：将 histfiles 的内容读到目前这个 shell 的 history 记录中。
+-w：将目前的 history 记录内容写入 histfiles 中。
+范例一：列出目前内存内的所有 history 记录。
+[dmtsai@study ~]# history
+# 前面省略
+2 ls                                                                              
+3 useradd vbird2                                                           
+4 cat /etc/passwd
+5 passwd vbird2
+# 列出的信息当中，共分两栏，第一栏为该命令在这个 shell 当中的历史，
+# 另一个则是命令本身的内容，至于会显示几条命令记录，则与 HISTSIZE 有关。
+范例二：列出目录最近的 3 条数据。
+[dmtsai@study ~]# history 3
+198 ls -al                                                                      199 history                                                                     200 history 3
+范例三：立即将目前的数据写入 histfile 当中。
+[dmtsai@study ~]# history -w
+# 在默认的情况下，会将历史命令写入 ~/.bash_history 当中。
+[dmtsai@study ~]# echo ${HISTSIZE}
+1000
+```
+在正常的情况下，历史命令的读取与记录是这样：
+- 当我们以 bash 登录 Linux 主机之后，系统会主动地由家目录的 ~/.bash_history 读取以前曾经执行过的命令，那么 ~/.bash_history 会记录几条数据？这就与你 bash 的 HISTFILESIZE 这个变量设置值有关了。
+- 假设我这次登录主机后，共执行过 100 次命令，**等我注销时，系统就会将 101~1100 这总共 1000 条历史命令更新到~/.bash_history 当中**。也就是说，历史命令在我注销时，会将最近的 HISTFILESIZE 条记录到我的记录文件当中。
+- 当然，也可以用 history -w 强制立刻写入。那为何用【更新】两个字？因为 ~/.bash_history 记录的条数永远都是 HISTFILESIZE 那么多，旧的信息会被主动的删除，仅保留最新的。
+
+那么 history 这个历史命令只可以让我查询命令而已吗？呵呵，当然不止，我们可以利用相关的功能来帮我们执行命令，举例来说：
+```shell
+[dmtsai@study ~]# !number
+[dmtsai@study ~]# !command
+[dmtsai@study ~]# !!
+选项与参数：
+number：执行第几条命令的意思。
+command：由最近的命令向前查找【命令串开头为 command】的那个命令，并执行。
+!!：就是执行上一个命令（相当于按向上键后，按回车）。
+[dmtsai@study ~]# history
+[dmtsai@study ~]# !66 <==执行第 66 条命令。
+[dmtsai@study ~]# !! <==执行上一个命令，本例中亦即!66。
+[dmtsai@study ~]# !al <==执行最近以 al 为开头的命令（上面列出的第 67 个）。
+```
+经过上面的介绍，有了解了吗？历史命令用法可多了。如果我想要执行上一个命令，除了使用上下键之外，我可以直接以【!!】来执行上个命令的内容，此外，我也可以直接选择执行第 n 个命令，【!n】来执行，也可以使用命令标头，例如【!vi】来执行最近命令开头是 vi 的命令行，相当的方便而好用。
+基本上 history 的用途很大，但是需要小心安全问题，尤其是 root 的历史记录文件，这是骇客（Cracker）的最爱。因为如果不小心会将 root 下执行的很多重要命令记录在 ~/.bash_history 当中，如果这个文件被解析的话，后果不堪。无论如何，使用 history 配合【!】曾经使用果的命令执行是很有效率的一个命令执行方法。
+
+### ◆ 同一账号同时多次登录的 history 写入问题
+
+有些朋友在练习 Linux 的时候喜欢同时开好几个 bash 界面。这些 bash 的身份都是 root，这样会有 ~/.bash_history 的写入问题吗？想一想，因为这些 bash 同时以 root 的身份登录，因此所有的 bash 都有自己的 1000 条记录在内存中。因为等到注销时才会更新记录文件，所以，最后注销的那个 bash 才会是最后写入的数据，唔，如此一来其他 bash 的命令操作就不会被记录下来了（其实有被记录，只是被后来的最后一个 bash 所覆盖更新了）。
+由于多重登录有这样的问题，所以很多朋友都习惯单一 bash 登录，再用任务管理（job control，第 4 篇会介绍）来切换不同任务。这样才能够将所有曾经执行过的命令记录下来，也才方便未来系统管理员进行命令的 debug。
+
+### ◆ 无法记录时间
+
+历史命令还有一个问题，那就是无法记录命令执行的时间。由于这 1000 条历史命令是依序记录的，但是并没有记录时间，所以在查询方面会有一些不方便。如果读者们有兴趣，其实可以通过~/.bash_logout 来进行 history 的记录，并加上 date 来增加时间参数，也是一个可以应用的方向。有兴趣的朋友可以先看看情境模拟题一吧。
+>鸟哥经常需要设计在线题目给学生考试用，所以需要登录系统去设计环境，设计完毕后再将该硬盘分派给学生来考试使用。只是，经常很担心同学不小心输入 history 就会得知鸟哥要考试的重点文件与命令，因此就得要使用 history -c，history -w 来强制更新记录文件。
+
+# 10.4 Bash shell 的操作环境
+
+是否记得我们登录主机的时候，屏幕上面会有一些说明文字，告知我们的 Linux 版本什么的，还有，登录的时候我们还可以给予用户一些信息或欢迎文字。此外，我们习惯的环境变量、命令别名等，是否可以登录就主动地帮我设置好？这些都是需要注意的。另外，这些设置值又可以分为系统全局设置值与各人喜好设置值，仅是一些文件放置的地点不同，这我们后面也会来谈一谈。
+
+## 10.4.1 路径与命令查找顺序
+
+我们在第 5 章与第 6 章都曾谈过相对路径与绝对路径的关系，在本章的前几小节也谈到了 alias 与 bash 的内置命令。现在我们知道系统里面其实有不少的 ls 命令，或是包括内置的 echo 命令，那么来想一想，如果一个命令（例如 ls）被执行时，到底是哪一个 ls 被拿来运行呢？很有趣吧，基本上，命令运行的顺序可以这样看：
+1. 以相对/绝对路径执行命令，例如【/bin/ls】或【./ls】
+2. 由 alias 找到该命令来执行
+3. 由 bash 内置的（builtin）命令来执行
+4. 通过$PATH这个变量的顺序查找到的第一个命令来执行
+举例来说，你可以执行 /bin/ls 及单纯的 ls 看看，会发现使用 ls 有颜色但是 /bin/ls 则没有颜色。因为 /bin/ls 是直接使用该命令来执行，而 ls 会因为【alias ls='ls --color=auto'】这个命令别名而先使用。如果想要了解命令查找的顺序，其实通过 type -a ls 也可以查询的到。上述的顺序最好先了解。
+
+## 10.4.2 bash 的登录与欢迎信息：/etc/issue、/etc/motd
+
+bash 也有登录画面与欢迎信息？真假？真的。还记得在终端界面（tty1~tty6）登录的时候，会有几行提示的字符串吗？那就是登录画面。那个字符串写在哪里呢？呵呵，在 /etc/issue 里面，先来看看：
+```shell
+[dmtsai@study ~]# cat /etc/issue
+Ubuntu 24.04.4 LTS \n \l
+```
+鸟哥是以完全未更新过的 CentOS 7.1 作为范例，里面默认有三行，有趣的地方在于 \r 与 \m，就如同$PS1 这变量一样，issue 这个文件的内容也是可以使用反斜杠作为变量使用，你可以 man issue 配合 man agetty 得到下面的结果：
+issue 内的各代码意义
+\d 本地端时间的日期
+\l 显示第几个终端界面
+\m 显示硬件的等级（i386/i486/i586/i686...）
+\n 显示主机的网络名称
+\O 显示 domain name
+\r 操作系统的版本（相当于 uname -r）
+\t 显示本地端时间的时间
+\S 操作系统的名称
+\v 操作系统的版本
+做一下下面这个练习，看看能不能取得你要的登录画面？
+你要注意的是，除了 /etc/issue 之外还有个 /etc/issue.net，这是啥？这个是提供给 telnet 这个远程登录程序用的。当我们使用 telnet 连接到主机时，主机的登录界面就会显示 /etc/issue.net 而不是 /etc/issue。
+至于如果**您想要让用户登录后取得一些信息，例如您想要让大家都知道的信息，那么可以将信息加入 /etc/motd 里面**。例如，当登录后，告诉登录者，系统将会在某个固定时间进行维护工作，可以这样做（一定要用 root 的身份才能修改）：
+```shell
+[root@study ~]# vim /etc/motd
+Hello everyone,
+Our server will be maintained at 2015/07/10 0:00 ~ 24:00.
+Please login server at that time.
+```
+那么当你的用户（包括所有的一般账号与 root）登录主机后，就会显示这样的信息出来：
+```shell
+Last login: Thu May 28 11:07:28 2026 from 112.96.231.97
+Hello everyone,
+Our server will be maintained at 2015/07/10 0:00 ~ 24:00.
+Please login server at that time.
+```
+
+## 10.4.3 bash 的环境配置文件
+
+你是否会觉得奇怪，怎么我们什么操作都没有进行，但是一进入 bash 就取得一堆有用的变量了呢？这是因为系统有一些环境配置文件的存在，让 bash 在启动时直接读取这些配置文件，以规划好 bash 的操作环境。而这些配置文件又可以分为全局系统配置文件以及用户个人偏好配置文件。要注意的是，我们前几个小节谈到的命令别名、自定义的变量，在你注销 bash 后就会失效，所以你想要保留你的设置，就得要将这些设置写入配置文件才行。下面就让我们来聊聊吧。
+
+### ◆ login 与 non-login shell
+
+在开始介绍 bash 的配置文件前，我们一定要先知道的就是 login shell 与 non-login shell，重点在于没有登录（login）。
+- login shell：取得 bash 时需要完整的登录流程，就称为 login shell。举例来说，你要由 tty1 ~ tty6 登录，需要输入用户的账号与密码，此时取得的 bash 就称为【login shell】。
+- non-login shell：取得 bash 的方法不需要重复登录的操作，举例来说，（1）你以 X Window 登录 Linux 后，再以 X 的图形化接口启动终端，此时这个终端接口并没有需要再次的输入账号与密码，该 bash 的环境就称为 non-login shell。（2）你在原本的 bash 环境下再次执行 bash 这个命令，同样的也没有输入账号密码，那第二个 bash（子进程）也是 non-login shell。
+为什么要介绍 login、non-login shell？这是因为这两个取得 bash 的情况中，读取的配置文件并不一样所致。由于我们需要登录系统，所以先谈谈 login shell 会读取哪些配置文件？一般来说，login shell 其实只会读取这两个配置文件：
+1. /etc/profile：这是系统整体的配置，你最好不要修改这个文件
+2. ~/.bash_profile 或 ~/.bash_login 或 ~/.profile：属于用户个人设置，你要添加自己的数据，就写入这里。
+那么，就让我们来聊一聊这两个文件吧，这两个文件的内容可是非常繁复的。
+
+### ◆ /etc/profile（login shell 才会读）
+
+你可以使用 vim 去阅读一下这个文件的内容。这个配置文件可以利用用户标识符（UID）来决定很多重要的变量数据，这也是**每个用户登录取得 bash 时一定会读取的配置文件**。所以如果你想要帮所有用户设置整体环境，那就是改这里。不过，没事还是不要随便改这个文件，该文件设置的变量主要有：
+- PATH：会根据 UID 决定 PATH 变量要不要含有 sbin 的系统命令目录
+- MAIL：根据账号设置好用户的 mailbox 到 /var/spool/mail/账号名
+- USER：根据用户的账号设置此变量内容
+- HOSTNAME：根据主机的 hostname 命令决定此变量内容
+- HISTSIZE：历史命令记录条数，CentOS 7.x 设置为 1000
+- umask：包括 root 默认为 022 而一般用户为 002 等
+/etc/profile 可不止会做这些事而已，它还会去调用外部的配置文件，在 CentOS 7.x 默认的情况下，下面这些文件会依序被调用：
+- `/etc/profile.d/*.sh`
+其实这是个目录内的众多文件。只要在 /etc/profile.d/ 这个目录内且扩展名为 .sh，另外，用户能够具有 r 的权限，那么该文件就会被 /etc/profile 调用。在 CentOS 7.x 中，这个目录下面这个文件规范了 bash 操作界面的颜色、语系、II 与 ls 命令的命令别名、vi 的命令别名、which 的命令别名等。如果你需要帮所有用户设置一些共享的命令别名时，可以在这个目录下面自行建立扩展名为 .sh 的文件，并将所需要的数据写入即可。
+- /etc/locale.conf
+这个文件是由 /etc/profile.d/lang.sh 调用的，这也是我们决定 bash 默认使用何种语系的重要配置文件。文件里最重要的就是 LANG/LC_ALL 这些个变量的设置，我们在前面的 locale 讨论过这个文件，自行回去看看先。
+- /usr/share/bash-completion/completions/*
+记得我们上面谈过[tab]的妙用吧？除了命令补齐、文件名补齐之外，还可以进行命令的选项/参数补齐功能。那就是从这个目录里面找到相对应的命令来处理，其实这个目录下面的内容是由 /etc/profile.d/bash_completion.sh 这个文件加载的。
+反正你只要记得，bash 的 login shell 情况下所读取的整体环境配置文件其实只有 /etc/profile，但是 /etc/profile 还会调用出其他的配置文件，所以让我们的 bash 操作界面变的非常的友善。接下来，让我们来看看，那么个人偏好的配置文件又是怎么回事？
+
+### ◆ ~/.bash_profile（login shell 才会读）
+
+bash 在读完了整体环境设置的 /etc/profile 并借此调用其他配置文件后，接下来则是会读取用户的个人配置文件。在 login shell 的 bash 环境中，所读取的个人偏好配置文件其实主要有三个，依序分别是：
+- ~/.bash_profile
+- ~/.bash_login
+- ~/.profile
+**其实 bash 的 login shell 设置只会读取上面三个文件的其中一个，而读取的顺序则是依照上面的顺序**。也就是说，如果 ~/.bash_profile 存在，那么其他两个文件不论有无存在，都不会被读取。如果 ~/.bash_profile 不存在才会去读取 ~/.bash_login，而前两者都不存在才会读取 ~/.profile 的意思。会有这么多的文件，其实是因应其他 shell 转换过来的用户的习惯而已。先让我们来看一下 dmtsai 的 /home/dmtsai/.bash_profile 的内容是怎样的？
+
+### ◆ source：读入环境配置文件的命令
+```shell
+[dmtsai@study ~]# source 配置文件文件名
+范例：将家目录的~/.bashrc 的设置读入目前的 bash 环境中。
+[dmtsai@study ~]# source ~/.bashrc <==下面这两个命令是一样的。
+[dmtsai@study ~]# . ~/.bashrc
+```
+
+### ◆ ~/.bashrc（non-login shell 会读）
+
+谈完了 login shell 后，那么 non-login shell 这种非登录情况取得 bash 操作界面的环境配置文件又是什么？当你取得 non-login shell 时，该 bash 配置文件仅会读取 ~/.bashrc 而已，那么默认的 ~/.bashrc 内容是如何？
+```shell
+[root@study ~]# cat ~/.bashrc
+# ~/.bashrc: executed by bash(1) for non-login shells.                             
+# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)         
+# for examples                                                                     
+# If not running interactively, don't do anything                                  
+[ -z "$PS1" ] && return                                                            
+# don't put duplicate lines in the history. See bash(1) for more options           
+# ... or force ignoredups and ignorespace                                          
+HISTCONTROL=ignoredups:ignorespace
+```
+特别注意一下，由于 root 的身份与一般用户不同，鸟哥是以 root 的身份取得上述的数据，如果是一般用户的 ~/.bashrc 会有些许不同。看一下，你会发现在 root 的 ~/.bashrc 中其实已经规范了较为安全的命令别名。此外，咱们的 CentOS 7.x 还会主动地调用 /etc/bashrc 这个文件。为什么需要调用 /etc/bashrc 呢？因为 /etc/bashrc 帮我们的 bash 定义出下面的内容：
+- 根据不同的 UID 设置 umask 的值
+- 根据不同的 UID 设置提示字符（就是 PS1 变量）
+- 调用 `/etc/profile.d/*.sh` 的设置
+你要注意的是，这个 /etc/bashrc 是 CentOS 特有的（其实是 Red Hat 系统特有的），其他不同的 Linux 发行版可能会使用不同的文件名。由于这个 ~/.bashrc 会调用 /etc/bashrc 及 `/etc/profile.d/*.sh`，所以，万一你没有 ~/.bashrc（可能自己不小心将它删除了），那么你会发现你的 bash 提示字符可能会变成这个样子：
+```shell
+-bash-4.2$
+```
+
+### ◆ 其他相关配置文件
+
+事实上还有一些配置文件可能会影响到你的 bash 操作的，下面就来谈一谈：
+- /etc/man_db.conf
+这个文件乍看之下好像跟 bash 没相关性，但是对于系统管理员来说，却也是很重要的一个文件。这文件的内容规范了使用 man 的时候，man page 的路径到哪里去寻找所以说的简单一点，这个文件规定了执行 man 的时候，该去哪里查看数据的路径设置。
+- ~/.bash_history
+还记得我们在历史命令提到过这个文件吧？默认的情况下，我们的历史命令就记录在这里。而这个文件能够记录几条数据，则与 HISTFILESIZE 这个变量有关。每次登录 bash 后，bash 会先读取这个文件，将所有的历史命令读入内存，因此，当我们登录 bash 后就加上查知上次使用过哪些命令。至于更多的历史命令，请自行回去参考。
+- ~/.bash_logout
+这个文件则记录了【当我注销 bash 后，系统再帮我做完什么操作后才离开】的意思。你可以去读取一下这个文件的内容，默认的情况下，注销时，bash 只是帮我们清掉屏幕的信息而已。不过，你也可以将一些备份或是其他你认为重要的任务写在这个文件中（例如清空缓存），那么当你离开 Linux 的时候，就可以解决一些烦人的事情。
+
+## 10.4.4 终端的环境设置：stty、set
+
+我们在第 4 章首次登录 Linux 时就提过，可以在 tty1 ~ tty6 这六个命令行模式的终端（Terminal）环境中登录，登录的时候我们可以取得一些字符设置的功能。举例来说，我们可以利用退格键（Backspace，就是那个 ← 符号的按键）来删除命令上的字符，也可以使用 [ctrl]+c 来强制终止一个命令的运行，当输入错误时，就会有声音警告。这是怎么办到的呢？很简单，因为登录终端的时候，会自动获取一些终端的输入环境的设置。
+事实上，目前我们使用的 Linux 发行版都帮我们设置好了最棒的用户环境，所以大家可以不用担心操作环境的问题。不过，在某些 UNIX-like 的机器中，还是可能需要动一些手才能够让我们的输入比较快乐。举例来说，利用 [Backspace] 删除，要比利用 [Del] 按键来的顺手。但是某些 UNIX 偏偏是以 [del] 来进行字符的删除，所以，这个时候就可以动动手。
+那么如何查看目前的一些按键内容？可以利用 stty（setting tty 终端的意思），stty 也可以帮助设置终端的输入按键代表的意义。
+```shell
+[dmtsai@study ~]# stty [-a]
+选项与参数：
+-a：将目前所有的 stty 参数列出来
+范例一：列出所有的按键与按键内容。
+[dmtsai@study ~]# stty -a
+speed 38400 baud; rows 54; columns 268; line = 0;                                  
+intr = ^C; quit = ^\; erase = ^?; kill = ^U; eof = ^D; eol = ; eol2 = ; swtch = ; start = ^Q; stop = ^S; susp = ^Z; rprnt = ^R; werase = ^W; lnext = ^V; discard = ^O; min = 1; time = 0;                                                             
+-parenb -parodd -cmspar cs8 -hupcl -cstopb cread -clocal -crtscts                  
+-ignbrk -brkint -ignpar -parmrk -inpck -istrip -inlcr -igncr icrnl ixon -ixoff -iuclc -ixany -imaxbel -iutf8                                                       
+opost -olcuc -ocrnl onlcr -onocr -onlret -ofill -ofdel nl0 cr0 tab0 bs0 vt0 ff0    
+isig icanon iexten echo echoe echok -echonl -noflsh -xcase -tostop -echoprt echoctl echoke -flusho -extproc
+```
+我们可以利用 stty -a 来列出目前环境中所有的按键列表，在上面的列表当中，需要注意的是特殊字体那几个，此外，**如果出现 ^ 表示 [Ctrl] 那个按键的意思**。举例来说，intr=`^C` 表示利用 [ctrl]+c 来完成的，几个重要关键词的意义是：
+- intr：发送一个 interrupt（中断）的信号给目前正在 run 的程序（就是终止）
+- quit：发送一个 quit 的信号给目前正在 run 的程序
+- erase：向后删除字符
+- kill：删除在目前命令行上的所有文字
+- eof：End of file 的意思，代表【结束输入】
+- start：在某个程序停止后，重新启动它的 output
+- stop：停止目前屏幕的输出
+- susp：送出一个 terminal stop 的信号给正在运行的程序
+记不记得我们在第 4 章讲过几个 Linux 快捷键？没错，就是这个 stty 设置值内的 intr（[ctrl]+c）/ eof（[ctrl]+d），至于删除字符，就是 erase 这个设置值。如果你想要用 [ctrl]+h 来进行字符的删除，那么可以执行：
+```shell
+[dmtsai@study ~]# stty erase ^h # 这个设置看看看就好，不必真的实践，不然还要改回来。
+```
+那么从此之后，你的删除字符就得要使用 [ctrl]+h，按下 [Backspace] 则会出现 ^? 字样。如果想要回复利用 [Backspace]，就执行 stty erase ^? 即可。至于更多的 stty 说明，记得参考一下 man stty 的内容。
+除了 stty 之外，其实我们的 bash 还有自己的一些终端设置值，那就是利用 set 来设置的。我们之前提到一些变量时，可以利用 set 来显示，除此之外，其实 set 还可以帮我们设置整个命令输出/输入的环境。例如记录历史命令、显示错误内容等。
+```shell
+[dmtsai@study ~]# set [-uvCHhmBx]
+选项与参数：
+-u：默认不启用，若启用后，当使用未设置变量时，会显示错误信息
+-v：默认不启用，若启用后，在信息被输出前，会先显示信息的原始内容
+-x：默认不启用，若启用后，在命令被执行前，会显示命令内容（前面有++符号）
+-h：默认启用，与历史命令有关
+-H：默认启用，与历史命令有关
+-m：默认启用，与任务管理有关
+-B：默认启用，与中括号[]的作用有关
+-C：默认不启用，若使用 > 等，则若文件存在时，该文件不会被覆盖
+范例一：显示目前所有的 set 设置值
+[dmtsai@study ~]# echo $-
+himBHs
+# 那个 $- 变量内容就是 set 的所有设置，bash 默认是 himBH。
+范例二：设置若使用未定义变量时，则显示错误信息。
+[dmtsai@study ~]# set -u
+[dmtsai@study ~]# echo $vbirding
+-bash: vbirding: unbound variable
+# 默认情况下，未设置/未声明的变量都会是【空的】，不过，若设置 -u 参数
+# 那么当使用未设置的变量时，就会有问题，很多的 shell 都默认启用 -u 参数
+# 若要取消这个参数，输入 set +u 即可。
+范例三：执行前，显示该命令内容。
+[dmtsai@study ~]# set -x
+++ history -a
+[dmtsai@study ~]# echo ${HOME}
++ echo /root                                                                       
+/root                                                                              
+++ history -a
+# 看见了么？要输出的命令都会先被打印到屏幕上，前面会多出 + 的符号。
+```
+另外，其实我们还有其他的按键设置功能，就是在前一小节提到的 /etc/inputrc 这个文件里面设置。还有例如 /etc/DIR_COLORS* 与 /usr/share/terminfo/* 等，也都是与终端有关的环境配置文件。不过，事实上，鸟哥并不建议您修改 tty 的环境，这是因为 bash 的环境已经设置的很好用了，我们不需要额外的设置或修改，否则反而会产生一些困扰。不过，在这里的配置信息只是希望大家能够清楚地知道我们的终端是如何进行设置的。最后，我们将 bash 默认的组合键汇整如下：
+
+| 组合按键     | 执行结果                |
+| -------- | ------------------- |
+| Ctrl + C | 终止目前的命令             |
+| Ctrl + D | 输入结束（EOF），例如邮件结束的时候 |
+| Ctrl + M | 就是回车                |
+| Ctrl + S | 暂停屏幕的输出             |
+| Ctrl + Q | 恢复屏幕的输出             |
+| Ctrl + U | 在提示字符下，将整列命令删除      |
+| Ctrl + Z | 暂停目前的命令             |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
