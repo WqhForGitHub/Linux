@@ -1296,6 +1296,248 @@ vbird2:x:1002:1003:VBirds test:/home/vbird2:/bin/sh
 ```
 sort 同样是很常用的命令，因为我们常常需要比较一些信息。举个上面的第二个例子来说，今天假设你有很多的账号，而且你想要知道最大的用户 ID 目前到哪一个了。呵呵，使用 sort 一下子就可以知道答案。当然其使用还不止此，有空的话不妨玩一玩。
 
+### ◆ uniq
+
+如果我排序完成了，想要将重复的数据仅列出一个显示，可以怎么做？
+```shell
+[dmtsai@study ~]# uniq [-ic]
+选项与参数：
+-i：忽略大小写字符的不同
+-c：进行计数
+范例一：使用 last 将账号列出，仅取出账号栏，进行排序后仅取出一位。
+[dmtsai@study ~]# last | cut -d ' ' -f 1 | sort | uniq
+范例二：承上题，如果我还想要知道每个人的登录总次数？
+[dmtsai@study ~]# last | cut -d ' ' -f 1 | sort | uniq -c
+1                                                                                  
+36 ubuntu                                                                     
+1 wtmp
+```
+这个命令用来将重复的行删除掉只显示一个，举个例子来说，你要知道这个月份登录你的主机的用户有谁，而不在乎它的登录次数，那么就使用上面的范例，（1）先将所有的数据列出（2）再将人名独立出来（3）经过排序（4）只显示一个。由于这个命令是在将重复的东西减少，所以当然需要配合排序过的文件来处理。
+
+### ◆ wc
+
+如果我想要知道 /etc/man_db.conf 这个文件里面有多少字？多少字符的话，可以怎么做？其实可以利用 wc 这个命令来完成，它可以帮我们计算输出信息的整体数据。
+```shell
+[dmtsai@study ~]# wc [-lwm]
+选项与参数：
+-l：仅列出行
+-w：仅列出多少字（英文字母）
+-m：多少字符
+范例一：那个 /etc/man_db.conf 里面到底有多少相关字、行、字符数？
+[dmtsai@study ~]# cat /etc/man_db.conf | wc
+
+范例二：使用 last 可以输出登录者，但是 last 最后两行并非账号内容，那么请问，我该如何以一行命令串取得登录系统的总人次？
+[dmtsai@study ~]# last | grep [a-zA-Z] | grep -v 'wtmp' | grep -v 'reboot' | \
+> grep -v 'unknown' | wc -l
+# 由于 last 会输出空白行、wtmp、unknown、reboot 等无关账号登录的信息，因此，我利用
+# grep 取出非空白行，以及去除上述关键字那几行，再计算行数，就能够了解。
+```
+wc 也可以当作命令？这可不是上洗手间的 WC，这是相当有用的计算文件内容的一个工具。举个例子来说，当你要知道目前你的账号文件中有多少个账号时，就使用这个方法：【cat /etc/passwd | wc -l】。因为 /etc/passwd 里面一行代表一个用户，所以知道行数就晓得有多少的账号在里面了，而如果要计算一个文件里面有多少个字符时，就使用 wc -m 这个选项。
+
+## 10.6.3 双向重定向：tee
+
+想个简单的东西，我们由前一节知道 > 会将数据流整个传送给文件或设备，因此我们除非去读取该文件或设备，否则就无法继续利用这个数据流。万一我想要将这个数据流的处理过程中将某段信息存下来，应该怎么做？利用 tee 就可以，我们可以这样简单的看一下：
+![tee 的工作流程示意图](https://linux-1257950569.cos.ap-guangzhou.myqcloud.com/%E9%B8%9F%E5%93%A5%E7%9A%84%20Linux%20%E7%A7%81%E6%88%BF%E8%8F%9C%EF%BC%88%E5%9F%BA%E7%A1%80%E5%AD%A6%E4%B9%A0%E7%AF%87%EF%BC%89%E7%AC%AC%E5%9B%9B%E7%89%88/%E7%AC%AC10%E7%AB%A0%EF%BC%9A%E8%AE%A4%E8%AF%86%E4%B8%8E%E5%AD%A6%E4%B9%A0BASH/tee%20%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B%E7%A4%BA%E6%84%8F%E5%9B%BE.png)
+tee 会同时将数据流分送到文件与屏幕（screen），而输出到屏幕的，其实就是 stdout，那就可以让下个命令继续处理。
+```shell
+[dmtsai@study ~]# tee [-a] file
+选项与参数：
+-a：以累加（append）的方式，将数据加入 file 当中。
+[dmtsai@study ~]# last | tee last.list | cut -d " " -f 1
+# 这个范例可以让我们将 last 的输出存一份到 last.list 文件中
+[dmtsai@study ~]# ls -l /home | tee ~/homefile | more
+# 这个范例则是将 ls 的数据存一份到~/homefile，同时屏幕也有输出信息。
+[dmtsai@study ~]# ls -l / | tee -a ~/homefile | more
+# 要注意，tee 后接的文件会被覆盖，若加上 -a 这个选项则能将信息累加。
+```
+tee 可以让 standard output 转存一份到文件内并将同样的数据继续送到屏幕去处理，，这样除了可以让我们同时分析一份数据并记录下来之外，还可以作为处理一份数据的中间缓存记录之用，tee 这家伙在很多选择/填空的认证考试中很容易考。
+
+## 10.6.4 字符转换命令：tr、col、join、paste、expand
+
+我们在 vim 程序编辑器中，提到过 DOS 换行符与 UNIX 换行符的不同，并且可以使用 dos2unix 与 unix2dos 来完成转换。好了，那么思考一下，是否还有其他常用的字符替代？举例来说，要将大写改成小写，或是将数据中的 [Tab] 按键转成空格键？还有，如何将两个文档整合成一个？下面我们就来介绍一下这些字符转换命令在管道当中的使用方法：
+
+### ◆ tr
+
+tr 可以用来删除一段信息当中的文字，或是进行文字信息的替换。
+```shell
+[dmtsai@study ~]# tr [-ds] SET1 ...
+选项与参数：
+-d：删除信息当中的 SET1 这个字符
+-s：替换掉重复的字符
+范例一：将 last 输出的信息中，所有的小写变成大写字符。
+[dmtsai@study ~]# last | tr '[a-z]' '[A-Z]'
+# 事实上，没有加上单引号也是可以执行的，如：【last | tr [a-z] [A-Z]】
+范例二：将 /etc/passwd 输出的信息中，将冒号（:）删除。
+[dmtsai@study ~]# cat /etc/passwd | tr -d ':'
+范例三：将 /etc/passwd 转存成 dos 换行到 /root/passwd 中，再将 ^M 符号删除。
+[dmtsai@study ~]# cp /etc/passwd ~/passwd && unix2dos ~/passwd
+[dmtsai@study ~]# file /etc/passwd ~/passwd
+
+[dmtsai@study ~]# cat ~/passwd | tr -d '\r' > ~/passwd.Linux
+# 那个 \r 指的是 DOS 的换行符，关于更多的字符，请参考 man tr。
+[dmtsai@study ~]# ll /etc/passwd ~/passwd*
+```
+其实这个命令也可以写在正则表达式里面，因为它也是由正则表达式的方式来替换数据的。以上面的例子来说，使用 [] 可以设置一串字，**也常常用来替换文件中的怪异符号**。例如上面第三个例子当中，可以去除 DOS 文件留下来的 `^M` 这个换行符，这东西相当有用。相信处理 Linux 和 Windows 系统中的人们最麻烦的一件事就是这个事情，即 DOS 下面会自动地在每行行尾加入 `^M` 这个换行符号。这个时候除了以前讲过地 dos2unix 之外，我们也可以使用这个 tr 来将 `^M` 去除，`^M` 可以使用 \r 来代替之。
+
+### ◆ col
+```shell
+[dmtsai@study ~]# col [-xb]
+选项与参数：
+-x：将 tab 键转换成对等地空格键。
+范例一：利用 cat -A 显示出所有特殊按键，最后以 col 将 [tab] 转成空白。
+[dmtsai@study ~]# cat -A /etc/man_db.conf <==此时会看到很多^I的符号，那就是 tab。
+[dmtsai@study ~]# cat /etc/man_db.conf | col -x | cat -A | more
+## 嘿嘿，如此一来，[tab]按键会被替换成为空格键，输出就美观多了。
+```
+虽然 col 有它特殊的用途，不过，很多时候，它可以用来简单地处理将 [tab] 按键替换成为空格键。例如上面的例子当中，如果使用 cat -A 则[tab] 会以 `^I` 来表示。但经过 col -x 的处理，则会将 [tab] 替换成为对等的空格键。
+
+### ◆ join
+
+join 看字面上的意义（加入/参加）就可以知道，它是在处理两个文件之间的数据，而且，主要是在处理【两个文件当中，有相同数据的那一行，才将它加在一起】的意思。我们利用下面的简单例子来说明：
+```shell
+[dmtsai@study ~]# join [-til2] file1 file2
+选项与参数：
+-t：join 默认以空格字符分隔数据，并且比对【第一个栏位】的数据，
+-i：忽略大小写的差异。
+-1：这个是数字的 1，代表【第一个文件要用哪个栏位来分析】的意思。
+-2：代表【第二个文件要用哪个栏位来分析】的意思。
+范例一：用 root 的身份，将 /etc/passwd 与 /etc/shadow 相关数据整合成一栏。
+[root@study ~]# head -n 3 /etc/passwd /etc/shadow
+==> /etc/passwd <==                                                                
+root:x:0:0:root:/root:/bin/bash                                                    
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin                                    
+bin:x:2:2:bin:/bin:/usr/sbin/nologin                                               
+==> /etc/shadow <==                                                                
+root:*:20512:0:99999:7:::                                                          
+daemon:*:19836:0:99999:7:::                                                        
+bin:*:19836:0:99999:7:::
+# 由输出的数据可以发现这两个文件的最左边栏位都是相同账号，且以:分隔。
+[root@study ~]# join -t ':' /etc/passwd /etc/shadow | head -n 3
+root:x:0:0:root:/root:/bin/bash:*:20512:0:99999:7:::                               
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin:*:19836:0:99999:7:::               
+bin:x:2:2:bin:/bin:/usr/sbin/nologin:*:19836:0:99999:7:::
+# 通过上面这个操作，我们可以将两个文件第一栏位相同者整合成一行。
+# 第二个文件的相同栏位并不会显示（因为已经在最左边的栏位出现了）。
+范例二：我们知道 /etc/passwd 第四个栏位是 GID，这个 GID 记录在 /etc/group 当中的第三个栏位，请问如何将两个文件整合？
+[root@study ~]# head -n 3 /etc/passwd /etc/group
+==> /etc/passwd <==                                                                
+root:x:0:0:root:/root:/bin/bash                                                    
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin                                    
+bin:x:2:2:bin:/bin:/usr/sbin/nologin                                               
+==> /etc/group <==                                                                 
+root:x:0:                                                                          
+daemon:x:1:                                                                        
+bin:x:2:
+# 从上面可以看到，确实有相同的部分。赶紧来整合一下。
+[root@study ~]# join -t ':' -1 4 /etc/passwd -2 3 /etc/group | head -n 3
+0:root:x:0:root:/root:/bin/bash:root:x:                                            
+1:daemon:x:1:daemon:/usr/sbin:/usr/sbin/nologin:daemon:x:                          
+2:bin:x:2:bin:/bin:/usr/sbin/nologin:bin:x:
+# 同样的，相同的栏位部分被移动到最前面了，所以第二个文件的内容就没再显示。
+# 请读者们配合上述显示两个文件的实际内容来比对。
+```
+这个 join 在处理两个相关数据文件时，就真的是很有帮助的。例如上面的案例当中，我的 /etc/passwd、/etc/shadow、/etc/group 都有相关性，其中 /etc/passwd、/etc/shadow 以账号为相关性，至于 /etc/passwd、/etc/group 则以所谓的 GID（账号的数字定义）来作为它的相关性。根据这个相关性，我们可以将有关系的数据放置在一起，这在处理数据可是相当有帮助的。但是上面的例子有点难，希望您可以静下心好好的看一看原因。
+此外，需要特别注意的是，**在使用 join 之前，你所需要处理的文件应该要事先经过排序（sort）处理**，否则有些比对的项目会被忽略，特别注意了。
+
+### ◆ paste
+
+这个 paste 就要比 join 简单多了。相对于 join 必须要比对两个文件的数据相关性，**paste 就直接将两行贴在一起，且中间以 [Tab] 键隔开**而已，简单的使用方法：
+```shell
+[dmtsai@study ~]# paste [-d] file1 file2
+选项与参数：
+-d：后面可以接分隔字符，默认是以 [Tab] 来分隔。
+-：如果 file 部分写成 -，表示来自标准输入的数据的意思。
+范例一：用 root 身份，将 /etc/passwd 与 /etc/shadow 同一行贴在一起。
+[root@study ~]# paste /etc/passwd /etc/shadow
+root:x:0:0:root:/root:/bin/bash root:*:20512:0:99999:7:::                          
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin daemon:*:19836:0:99999:7:::        
+bin:x:2:2:bin:/bin:/usr/sbin/nologin    bin:*:19836:0:99999:7:::
+# 注意，同一行中间是以 [Tab] 按键隔开。
+范例二：先将 /etc/group 读出（用 cat），然后与范例一贴上一起，且仅取出前三行。
+[root@study ~]# cat /etc/group|paste /etc/passwd /etc/shadow -|head -n 3
+# 这个例子的重点在这个 - 的使用，那玩意儿常常代表 stdin。
+```
+
+### ◆ expand
+
+这玩意儿就是在将 [tab] 按键转成空格键，可以这样玩：
+```shell
+[dmtsai@study ~]# expand [-t] file
+选项与参数：
+-t：后面可接数字，一般来说一个 Tab 按键可以用 8 个空格键替换，我们也可以自行定义一个[Tab]按键代表多少个字符。
+范例一：将 /etc/man_db.conf 内行首为 MANPATH 的字样就取出：仅取前三行。
+[dmtsai@study ~]# grep '^MANPATH' /etc/man_db.conf | head -n 3
+```
+expand 也是挺好玩的，它会自动将[Tab]转成空格键，所以，以上面的例子来说，使用 cat -A 就会查不到 `^I` 的字符，此外，因为[Tab]最大的功能就是格式排列整齐。我们转成空格键后，这个空格键也会依据我们自己的定义来增加大小，并不是一个 `^I` 就会换成 8 个空格，这个地方要特别注意，此外，您也可以参考一下 unexpand 这个将空格转成[Tab]的命令。
+
+
+## 10.6.5 划分命令：split
+
+如果你有文件太大，导致携带不太方便的话，嘿嘿，找 split 就对了，它可以帮你将一个大文件，依据文件大小或行数来划分，就可以将大文件划分成为小文件了，快速又有效，真不错。
+```shell
+[dmtsai@study ~]# split [-bl] file PREFIX
+选项与参数：
+-b：后面可接欲划分成的文件大小，可作为划分文件的前缀文字。
+-l：以行数来进行划分。
+PREFIX：代表前缀字符的意思，可作为划分文件的前缀文字。
+范例一：我的 /etc/services 有六百多 K，若想要分成 300K 一个文件时？
+[dmtsai@study ~]# cd /tmp; split -b 300k /etc/services services
+[dmtsai@study ~]# ll -k services*
+-rw-r--r-- 1 root root 12813 May 31 12:40 servicesaa
+# 这个文件名可随意取，我们只要写上前缀文字，小文件就会以 xxxaa、xxxab、xxxac 等方式来建立小文件。
+范例二：如何将上面的三个小文件合成一个文件，文件名为 serviceback。
+[dmtsai@study ~]# cat services* >> serviceback
+# 很简单吧？就用数据流重定向就好，简单。
+范例三：使用 ls -al /输出的信息中，每十行记录成一个文件。
+[dmtsai@study ~]# ls -al / | split -l 10 - lsroot
+[dmtsai@study ~]# wc -l lsroot*
+10 lsrootaa                                                                       
+10 lsrootab                                                                      
+10 lsrootac                                                                      
+1 lsrootad                                                                      
+31 total
+# 重点在这个-号，一般来说，如果需要 stdout 与 stdin 时，但偏偏又没有文件，
+# 有的只是-时，那么这个-就会被当成 stdin 或 stdout。
+```
+在 Windows 操作系统下，你要将文件划分需要如何操作呢？伤脑筋吧，在 Linux 下面就简单得多了。你要将文件划分的话，那么就使用 -b size 来将一个划分的文件限制其大小，如果是行数的话，那么就使用 -l line 来划分，好用得很，如此一来，你就可以轻易将你的文件划分成某些软件能够支持的最大容量（例如 gmail 单一邮件 25MB 之类的），方便你复制。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
