@@ -1467,6 +1467,12 @@ bin:x:2:2:bin:/bin:/usr/sbin/nologin    bin:*:19836:0:99999:7:::
 -t：后面可接数字，一般来说一个 Tab 按键可以用 8 个空格键替换，我们也可以自行定义一个[Tab]按键代表多少个字符。
 范例一：将 /etc/man_db.conf 内行首为 MANPATH 的字样就取出：仅取前三行。
 [dmtsai@study ~]# grep '^MANPATH' /etc/man_db.conf | head -n 3
+
+范例二：承上，如果我想要将所有的符号都列出来？（用 cat）
+[dmtsai@study ~]# grep '^MANPATH' /etc/man_db.conf | head -n 3 | cat -A
+
+范例三：承上，我将 [tab] 按键设置成 6 个字符的话？
+[dmtsai@study ~]# grep '^MANPATH' /etc/man_db.conf | head -n 3 | expand -t 6 - | cat -A
 ```
 expand 也是挺好玩的，它会自动将[Tab]转成空格键，所以，以上面的例子来说，使用 cat -A 就会查不到 `^I` 的字符，此外，因为[Tab]最大的功能就是格式排列整齐。我们转成空格键后，这个空格键也会依据我们自己的定义来增加大小，并不是一个 `^I` 就会换成 8 个空格，这个地方要特别注意，此外，您也可以参考一下 unexpand 这个将空格转成[Tab]的命令。
 
@@ -1500,6 +1506,68 @@ PREFIX：代表前缀字符的意思，可作为划分文件的前缀文字。
 # 有的只是-时，那么这个-就会被当成 stdin 或 stdout。
 ```
 在 Windows 操作系统下，你要将文件划分需要如何操作呢？伤脑筋吧，在 Linux 下面就简单得多了。你要将文件划分的话，那么就使用 -b size 来将一个划分的文件限制其大小，如果是行数的话，那么就使用 -l line 来划分，好用得很，如此一来，你就可以轻易将你的文件划分成某些软件能够支持的最大容量（例如 gmail 单一邮件 25MB 之类的），方便你复制。
+
+## 10.6.6 参数代换：xargs
+
+xargs 是在做什么的？就以字面上的意义来看，x 是加减乘除的乘号，args 则是 arguments（参数）的意思，所以说，**这个玩意儿就是在产生某个命令的参数的意思**。xargs 可以读入 stdin 的数据，并且以空格符或换行符作为识别符，将 stdin 的数据分隔成为参数。因为是以空格符作为分隔，所以，如果有一些文件名或是其他意义的名词内含有空格符的时候，xargs 可能就会误判了，它的用法其实也还蛮简单的，就来看一看。
+```shell
+[dmtsai@study ~]# xargs [-0epn] command
+选项与参数：
+-0：如果输入的 stdin 含有特殊字符，例如 `、\、空格等字符时，这个-0参数
+	可以将它还原成一般字符，这个参数可以用于特殊状态。
+-e：这是 EOF（end of file）的意思，后面可以接一个字符，当 xargs 分析到这个字符时，就会停止工作。
+-p：在执行每个命令时，都会询问使用者的意思
+-n：后面接次数，每次 command 命令执行时，要使用几个参数的意思。
+当 xargs 后面没有接任何的命令时，默认是以 echo 来进行输出。
+范例一：将 /etc/passwd 内的第一栏取出，仅取三行，使用 id 这个命令将每个账号内容显示来。
+[dmtsai@study ~]# id root
+uid=0(root) gid=0(root) groups=0(root) # 这个 id 命令可以查询使用者的 UID/GID 等信息。
+[dmtsai@study ~]# id $(cut -d ':' -f 1 /etc/passwd | head -n 3)
+# 虽然使用$(cmd)可以预先取得参数，但可惜的是，id 这个命令【仅】能接受一个参数而已。
+# 所以上述的这个命令执行会出现错误。根本不会显示用户的 ID。
+[dmtsai@study ~]# cut -d ':' -f 1 /etc/passwd | head -n 3 | id
+uid=0(root) gid=0(root) groups=0(root) # 我不是要查自己。
+# 因为 id 并不是管道命令，因此在上面这个命令执行后，前面的东西通通不见，只会执行 id。
+[dmtsai@study ~]# cut -d ':' -f 1 /etc/passwd | head -n 3 | xargs id
+uid=0(root) gid=0(root) groups=0(root)                                             
+uid=1(daemon) gid=1(daemon) groups=1(daemon)                                       
+uid=2(bin) gid=2(bin) groups=2(bin)
+# 通过 -n 来处理，一次给予一个参数，因此上述的结果就 OK 正常地显示。
+范例二：同上，但是每次执行 id 时，都要询问使用者是否操作？
+[dmtsai@study ~]# cut -d ':' -f 1 /etc/passwd | head -n 3 | xargs -p -n 1 id
+id root?...                                                                        
+id daemon?...                                                                      
+id bin?...                                                                         
+id?...
+# 呵呵，这个 -p 的选项可以让使用者的使用过程中，被询问到每个命令是否执行。
+范例三：将所有的 /etc/passwd 内的账号都以 id 查看，但查到 sync 就结束命令串。
+[dmtsai@study ~]# cut -d ':' -f 1 /etc/passwd | xargs -e 'sync' -n 1 id
+# 仔细与上面的案例做比较，也同时注意，那个 -e 'sync' 是连在一起的，中间没有空格。
+# 上个例子当中，第六个参数是 sync，那么我们执行 -e 'sync' 后，则分析到 sync 这个字符时，
+# 后面的其他 stdin 的内容就会被 xargs 舍弃掉了。
+```
+其实，在 man xargs 里面就有三四个小范例，您可以自行参考一下内容。此外，xargs 真的是很好用的一个玩意儿，您真的需要好好地参详。要使用 xargs 的原因是，**很多命令其实并不支持管道命令，因此我们可以通过 xargs 来提供该命令使用标准输入**。举例来说，我们使用如下的范例来说明：
+```shell
+范例四：找出 /usr/sbin 下面具有特殊权限的文件名，并使用 ls -l 列出详细属性。
+[dmtsai@study ~]# find /usr/sbin -perm /7000 | xargs ls -l
+-rwxr-sr-x 1 root shadow 26944 Sep 15  2025 /usr/sbin/pam_extrausers_chkpwd        
+-rwxr-sr-x 1 root shadow 31040 Sep 15  2025 /usr/sbin/unix_chkpwd
+
+# 聪明的读者应该会想到使用【ls -al $(find /usr/sbin -perm /7000)】来处理这个范例。
+# 都 OK 啦，能解决问题的方法，就是好办法。
+```
+
+## 10.6.7 关于减号【-】的用途
+
+管道命令在 bash 的连续的处理程序中是相当重要的。另外，在日志文件的分析当中也是相当重要的一环，所以请特别留意。另外，在管道命令当中，常常会使用到前一个命令的 stdout 作为这次的 stdin，某些命令需要用到文件名（例如 tar）来进行处理时，该 stdin 与 stdout 可以利用减号 "-" 来替代，举例来说：
+```shell
+[root@study ~]# mkdir /tmp/homeback
+[root@study ~]# tar -cvf - /home | tar -xvf - -C /tmp/homeback
+```
+上面这个例子是说：【我将 /home 里面的文件给它打包，但打包的数据不是记录到文件，而是传送到 stdout，经过管道后，将 tar -cvf - /home 传送给后面的 tar -xvf -】。后面的这个-则是使用前一个命令的 stdout，因此，我们就不需要使用文件名了，这是很常见的例子，注意注意。
+
+
+
 
 
 
